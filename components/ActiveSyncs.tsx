@@ -5,6 +5,7 @@ const ActiveSyncs = () => {
   // Mock data for your MCA project
   const routes = [
     { id: 1, name: 'Manali Trek', location: 'Himachal, India', buddies: 12, img: 'https://mountainsojourns.com/wp-content/uploads/02_BeasKundTrek-Manali.jpg' },
+    { id: 2, name: 'Leh Ladhak', location: 'Leh, India', buddies: 8, img: 'https://zoyotrip.in/wp-content/uploads/2025/04/WhatsApp-Image-2025-04-24-at-1.09.20-PM-1-1024x1024.jpeg.webp' },
     { id: 2, name: 'Goa Coastal', location: 'Goa, India', buddies: 8, img: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?q=80&w=1000&auto=format&fit=crop' },
   ];
 
