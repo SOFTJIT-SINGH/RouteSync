@@ -1,4 +1,5 @@
 // App.tsx
+import AuthScreen from 'screens/AuthScreen';
 import 'react-native-gesture-handler'; // Keep this at the VERY top
 import './global.css';
 import React from 'react';
@@ -22,6 +23,7 @@ import Sidebar from './components/Sidebar';
 // Screens
 import ChatScreen from './screens/ChatScreen'; 
 import ProfileScreen from './screens/ProfileScreen';
+
 
 function HomeScreen({ navigation }: any) {
   const [modalVisible, setModalVisible] = React.useState(false);
@@ -73,7 +75,8 @@ const Drawer = createDrawerNavigator();
 
 function MainStack() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator initialRouteName="Auth" screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Auth" component={AuthScreen} />
       <Stack.Screen name="HomeDashboard" component={HomeScreen} />
       <Stack.Screen name="Chat" component={ChatScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
