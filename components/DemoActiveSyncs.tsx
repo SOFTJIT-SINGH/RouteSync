@@ -12,7 +12,7 @@ const DemoActiveSyncs = () => {
   return (
     <View className="mt-10">
       <View className="flex-row justify-between items-center mb-5">
-        <Text className="text-2xl font-bold text-rs-dark">Active Syncs</Text>
+        <Text className="text-2xl font-bold text-rs-dark">Recent Syncs</Text>
         <Text className="text-rs-green font-bold text-sm">View All</Text>
       </View>
 

@@ -24,6 +24,7 @@ import Sidebar from './components/Sidebar';
 import ChatScreen from './screens/ChatScreen'; 
 import ProfileScreen from './screens/ProfileScreen';
 import DemoActiveSyncs from 'components/DemoActiveSyncs';
+import DemoBuddyMatch from 'components/DemoBuddyMatch';
 
 
 function HomeScreen({ navigation }: any) {
@@ -56,6 +57,7 @@ function HomeScreen({ navigation }: any) {
         <AddItinerary />
 
         <TouchableOpacity onPress={() => navigation.navigate('Chat')}>
+          <DemoBuddyMatch />
           <BuddyMatch />
         </TouchableOpacity>
         
