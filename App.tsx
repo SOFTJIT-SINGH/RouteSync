@@ -1,15 +1,17 @@
 // App.tsx
-import AuthScreen from 'screens/AuthScreen';
-import 'react-native-gesture-handler'; // Keep this at the VERY top
+import 'react-native-gesture-handler'; // MUST be at the top
 import './global.css';
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
+
+// Supabase Client
+import { supabase } from './lib/supabase';
 
 // Components
 import Navbar from './components/Navbar';
@@ -21,14 +23,57 @@ import FilterModal from './components/FilterModal';
 import Sidebar from './components/Sidebar';
 
 // Screens
+import AuthScreen from './screens/AuthScreen';
 import ChatScreen from './screens/ChatScreen'; 
 import ProfileScreen from './screens/ProfileScreen';
-import DemoActiveSyncs from 'components/DemoActiveSyncs';
 import DemoBuddyMatch from 'components/DemoBuddyMatch';
-
+import DemoActiveSyncs from 'components/DemoActiveSyncs';
 
 function HomeScreen({ navigation }: any) {
   const [modalVisible, setModalVisible] = React.useState(false);
+
+  // 1. Setup Match Notification Listener
+  useEffect(() => {
+    const setupMatchListener = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const channel = supabase
+        .channel('match-notifications')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'match_requests',
+          },
+          async (payload) => {
+            // Verify if the trip belongs to the current user
+            const { data: trip } = await supabase
+              .from('trips')
+              .select('user_id, destination')
+              .eq('id', payload.new.trip_id)
+              .single();
+
+            if (trip && trip.user_id === user.id) {
+              Alert.alert(
+                "⚡ New Sync Request!",
+                `Someone wants to join your journey to ${trip.destination}. Check your matches!`,
+                [{ text: "OK", style: "default" }]
+              );
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    };
+
+    setupMatchListener();
+  }, []);
+
   return (
     <SafeAreaView className="flex-1 bg-rs-bg">
       <StatusBar style="dark" />
@@ -52,6 +97,8 @@ function HomeScreen({ navigation }: any) {
         </TouchableOpacity>
 
         <HeroButtons />
+        
+        {/* Real Data Components */}
         <DemoActiveSyncs />
         <ActiveSyncs />
         <AddItinerary />
