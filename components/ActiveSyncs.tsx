@@ -1,13 +1,51 @@
-import { View, Text, ScrollView, ImageBackground, Image } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, ScrollView, ImageBackground, Image, ActivityIndicator } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
+import { supabase } from '../lib/supabase'; // Ensure this path is correct
 
 const ActiveSyncs = () => {
-  // Mock data for your MCA project
-  const routes = [
-    { id: 1, name: 'Manali Trek', location: 'Himachal, India', buddies: 12, img: 'https://mountainsojourns.com/wp-content/uploads/02_BeasKundTrek-Manali.jpg' },
-    { id: 2, name: 'Leh Ladhak', location: 'Leh, India', buddies: 8, img: 'https://zoyotrip.in/wp-content/uploads/2025/04/WhatsApp-Image-2025-04-24-at-1.09.20-PM-1-1024x1024.jpeg.webp' },
-    { id: 3, name: 'Goa Coastal', location: 'Goa, India', buddies: 8, img: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?q=80&w=1000&auto=format&fit=crop' },
-  ];
+  const [routes, setRoutes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchTrips();
+  }, []);
+
+  const fetchTrips = async () => {
+    try {
+      setLoading(true);
+      // Fetching from 'trips' table (Source/Destination/Dates/Budget)
+      // We also join with 'users' to get the creator's info if needed
+      const { data, error } = await supabase
+        .from('trips')
+        .select(`
+          *,
+          users (
+            full_name,
+            avatar_url
+          )
+        `)
+        .eq('visibility', 'public')
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
+      setRoutes(data || []);
+    } catch (error: any) {
+      console.error('Error fetching trips:', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View className="mt-10 items-center justify-center py-20">
+        <ActivityIndicator size="large" color="#30AF5B" />
+        <Text className="text-rs-gray mt-4">Finding active journeys...</Text>
+      </View>
+    );
+  }
 
   return (
     <View className="mt-10">
@@ -17,40 +55,47 @@ const ActiveSyncs = () => {
       </View>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
-        {routes.map((route) => (
-          <View key={route.id} className="mr-5 w-[320px] h-[450px] rounded-5xl overflow-hidden shadow-xl shadow-black/20">
-            <ImageBackground source={{ uri: route.img }} className="flex-1 p-6 justify-between">
-              
-              {/* Top Info Tag */}
-              <View className="flex-row items-center bg-white/20 self-start p-3 rounded-full border border-white/30">
-                <View className="bg-rs-green p-2 rounded-full mr-3">
-                  <FontAwesome6 name="map-location-dot" size={14} color="white" />
+        {routes.length > 0 ? (
+          routes.map((route) => (
+            <View key={route.id} className="mr-5 w-[320px] h-[450px] rounded-5xl overflow-hidden shadow-xl shadow-black/20">
+              <ImageBackground 
+                source={{ uri: route.img || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b' }} 
+                className="flex-1 p-6 justify-between"
+              >
+                {/* Top Info Tag */}
+                <View className="flex-row items-center bg-white/20 self-start p-3 rounded-full border border-white/30">
+                  <View className="bg-rs-green p-2 rounded-full mr-3">
+                    <FontAwesome6 name="map-location-dot" size={14} color="white" />
+                  </View>
+                  <View>
+                    <Text className="text-white font-bold text-xs">{route.destination}</Text>
+                    <Text className="text-white/80 text-[10px]">Starts: {route.start_date}</Text>
+                  </View>
                 </View>
-                <View>
-                  <Text className="text-white font-bold text-xs">{route.name}</Text>
-                  <Text className="text-white/80 text-[10px]">{route.location}</Text>
-                </View>
-              </View>
 
-              {/* Bottom Avatar Stack (The "Sync" Group) */}
-              <View className="flex-row items-center">
-                <View className="flex-row -space-x-4">
-                  {[1, 2, 3, 4].map((i) => (
+                {/* Bottom Info - Creator & Budget */}
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-row items-center">
                     <Image 
-                      key={i}
-                      source={{ uri: `https://i.pravatar.cc/100?u=${route.id}${i}` }}
+                      source={{ uri: route.users?.avatar_url || 'https://i.pravatar.cc/100' }}
                       className="w-10 h-10 rounded-full border-2 border-white"
                     />
-                  ))}
+                    <Text className="ml-3 text-white font-bold text-sm">
+                      By {route.users?.full_name?.split(' ')[0] || 'Traveler'}
+                    </Text>
+                  </View>
+                  <View className="bg-white/90 px-3 py-1 rounded-lg">
+                    <Text className="text-rs-green font-bold text-xs">₹{route.budget_min}</Text>
+                  </View>
                 </View>
-                <Text className="ml-3 text-white font-bold text-sm">
-                  {route.buddies}+ Synced
-                </Text>
-              </View>
-
-            </ImageBackground>
+              </ImageBackground>
+            </View>
+          ))
+        ) : (
+          <View className="w-[320px] h-[100px] items-center justify-center bg-rs-bg rounded-3xl">
+             <Text className="text-rs-gray italic">No active syncs found.</Text>
           </View>
-        ))}
+        )}
       </ScrollView>
     </View>
   );

@@ -23,6 +23,7 @@ import Sidebar from './components/Sidebar';
 // Screens
 import ChatScreen from './screens/ChatScreen'; 
 import ProfileScreen from './screens/ProfileScreen';
+import DemoActiveSyncs from 'components/DemoActiveSyncs';
 
 
 function HomeScreen({ navigation }: any) {
@@ -50,6 +51,7 @@ function HomeScreen({ navigation }: any) {
         </TouchableOpacity>
 
         <HeroButtons />
+        <DemoActiveSyncs />
         <ActiveSyncs />
         <AddItinerary />
 
@@ -75,8 +77,9 @@ const Drawer = createDrawerNavigator();
 
 function MainStack() {
   return (
-    <Stack.Navigator initialRouteName="Auth" screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Auth" component={AuthScreen} />
+    <Stack.Navigator initialRouteName="HomeDashboard" screenOptions={{ headerShown: false }}>
+    {/* <Stack.Navigator initialRouteName="Auth" screenOptions={{ headerShown: false }}> */}
+      {/* <Stack.Screen name="Auth" component={AuthScreen} /> */}
       <Stack.Screen name="HomeDashboard" component={HomeScreen} />
       <Stack.Screen name="Chat" component={ChatScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />

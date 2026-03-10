@@ -1,66 +1,121 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
-import { FontAwesome6, MaterialIcons } from '@expo/vector-icons';
+import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { FontAwesome6 } from '@expo/vector-icons';
+import { supabase } from '../lib/supabase';
 
 const AddItinerary = () => {
-  const [dest, setDest] = useState('');
-  const [budget, setBudget] = useState('5000');
+  const [loading, setLoading] = useState(false);
+  
+  // Form State
+  const [destination, setDestination] = useState('');
+  const [source, setSource] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [budget, setBudget] = useState('');
+
+  const handleAddTrip = async () => {
+    // 1. Basic Validation
+    if (!destination || !source || !startDate || !budget) {
+      Alert.alert('Missing Fields', 'Please fill in the destination, source, date, and budget.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // 2. Get Current User ID
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) throw new Error('You must be logged in to add a trip.');
+
+      // 3. Insert into 'trips' table
+      const { error } = await supabase
+        .from('trips')
+        .insert([
+          {
+            user_id: user.id,
+            source: source,
+            destination: destination,
+            start_date: startDate, // Expected format: YYYY-MM-DD
+            end_date: endDate || startDate,
+            budget_min: parseFloat(budget),
+            budget_max: parseFloat(budget),
+            visibility: 'public'
+          }
+        ]);
+
+      if (error) throw error;
+
+      Alert.alert('Success!', 'Your journey has been synced to the community.');
+      
+      // 4. Clear Form
+      setDestination('');
+      setSource('');
+      setStartDate('');
+      setEndDate('');
+      setBudget('');
+
+    } catch (error: any) {
+      Alert.alert('Error', error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <View className="mt-10 bg-white p-8 rounded-5xl shadow-xl shadow-black/5 border border-rs-bg">
+    <View className="mt-10 bg-white p-8 rounded-5xl border border-rs-bg shadow-sm">
       <View className="flex-row items-center mb-6">
         <View className="bg-rs-bg p-3 rounded-2xl mr-4">
-          <FontAwesome6 name="route" size={20} color="#30AF5B" />
+          <FontAwesome6 name="map-location-dot" size={24} color="#30AF5B" />
         </View>
-        <Text className="text-2xl font-bold text-rs-dark">New Journey</Text>
+        <Text className="text-2xl font-bold text-rs-dark">Add Itinerary</Text>
       </View>
 
-      {/* Destination Input */}
-      <View className="mb-6">
-        <Text className="text-rs-gray font-bold text-xs uppercase mb-2 ml-1">Destination</Text>
-        <View className="flex-row items-center bg-rs-bg rounded-2xl px-4 py-3 border border-rs-green/10">
-          <MaterialIcons name="place" size={20} color="#7B7B7B" />
-          <TextInput 
-            className="flex-1 ml-2 text-rs-dark font-medium" 
-            placeholder="Where are you heading?"
-            value={dest}
-            onChangeText={setDest}
+      <View className="space-y-4">
+        {/* Source & Destination */}
+        <TextInput
+          placeholder="From (e.g. Amritsar)"
+          className="bg-rs-bg p-4 rounded-2xl text-rs-dark font-medium"
+          value={source}
+          onChangeText={setSource}
+        />
+        <TextInput
+          placeholder="To (e.g. Manali)"
+          className="bg-rs-bg p-4 rounded-2xl text-rs-dark font-medium mt-3"
+          value={destination}
+          onChangeText={setDestination}
+        />
+
+        {/* Date & Budget */}
+        <View className="flex-row gap-3 mt-3">
+          <TextInput
+            placeholder="Date (YYYY-MM-DD)"
+            className="flex-1 bg-rs-bg p-4 rounded-2xl text-rs-dark font-medium"
+            value={startDate}
+            onChangeText={setStartDate}
+          />
+          <TextInput
+            placeholder="Budget (₹)"
+            className="flex-1 bg-rs-bg p-4 rounded-2xl text-rs-dark font-medium"
+            value={budget}
+            keyboardType="numeric"
+            onChangeText={setBudget}
           />
         </View>
+
+        {/* Submit Button */}
+        <TouchableOpacity 
+          onPress={handleAddTrip}
+          disabled={loading}
+          className="bg-rs-green py-5 rounded-3xl mt-6 items-center shadow-lg shadow-green-900/20"
+        >
+          {loading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text className="text-white font-bold text-lg">Post Sync Route</Text>
+          )}
+        </TouchableOpacity>
       </View>
-
-      {/* Date & Budget Row */}
-      <View className="flex-row justify-between mb-8">
-        <View className="w-[48%]">
-          <Text className="text-rs-gray font-bold text-xs uppercase mb-2 ml-1">Start Date</Text>
-          <TouchableOpacity className="bg-rs-bg rounded-2xl p-4 border border-rs-green/10 flex-row items-center">
-             <MaterialIcons name="event" size={18} color="#7B7B7B" />
-             <Text className="ml-2 text-rs-dark font-medium text-xs">Mar 15, 2026</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View className="w-[48%]">
-          <Text className="text-rs-gray font-bold text-xs uppercase mb-2 ml-1">Budget (₹)</Text>
-          <View className="bg-rs-bg rounded-2xl p-4 border border-rs-green/10 flex-row items-center">
-             <Text className="text-rs-green font-bold">₹</Text>
-             <TextInput 
-                className="ml-2 text-rs-dark font-bold text-xs" 
-                keyboardType="numeric"
-                value={budget}
-                onChangeText={setBudget}
-             />
-          </View>
-        </View>
-      </View>
-
-      {/* Submit Button */}
-      <TouchableOpacity 
-        className="bg-rs-green py-5 rounded-3xl flex-row justify-center items-center shadow-lg shadow-green-900/20"
-        onPress={() => alert(`Syncing ${dest} to RouteSync Engine...`)}
-      >
-        <Text className="text-white font-bold text-lg mr-3">Sync Itinerary</Text>
-        <FontAwesome6 name="arrow-right" size={18} color="white" />
-      </TouchableOpacity>
     </View>
   );
 };
