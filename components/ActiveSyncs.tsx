@@ -48,16 +48,29 @@ const ActiveSyncs = () => {
   }
 
   return (
-    <View className="mt-10">
+    <View className="mt-10 ">
       <View className="flex-row justify-between items-center mb-5">
         <Text className="text-2xl font-bold text-rs-dark">Active Syncs</Text>
         <Text className="text-rs-green font-bold text-sm">View All</Text>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false} 
+        className="flex-row"
+        // --- ADDED PREMIUM SCROLL SNAPPING ---
+        snapToInterval={340} // 320px (card) + 20px (mr-5)
+        snapToAlignment="start"
+        decelerationRate="normal"
+        // -------------------------------------
+      >
         {routes.length > 0 ? (
           routes.map((route) => (
-            <View key={route.id} className="mr-5 w-[320px] h-[450px] rounded-5xl overflow-hidden shadow-xl shadow-black/20">
+            <View 
+              key={route.id} 
+              // Changed rounded-5xl to rounded-[32px] for native stability
+              className="mr-5 w-[320px] h-[450px] rounded-[32px] overflow-hidden shadow-xl shadow-black/20"
+            >
               <ImageBackground 
                 source={{ uri: route.img || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b' }} 
                 className="flex-1 p-6 justify-between"
@@ -92,8 +105,8 @@ const ActiveSyncs = () => {
             </View>
           ))
         ) : (
-          <View className="w-[320px] h-[100px] items-center justify-center bg-rs-bg rounded-3xl">
-             <Text className="text-rs-gray italic">No active syncs found.</Text>
+          <View className="w-[320px] h-[80px] items-center justify-center bg-rs-bg rounded-[32px]">
+             <Text className="text-rs-gray italic text-xl">No active syncs found.</Text>
           </View>
         )}
       </ScrollView>

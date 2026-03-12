@@ -11,24 +11,34 @@ const DemoActiveSyncs = () => {
 
   return (
     <View className="mt-10">
-      <View className="flex-row justify-between items-center mb-5">
+      <View className="mb-5 flex-row items-center justify-between">
         <Text className="text-2xl font-bold text-rs-dark">Recent Syncs</Text>
-        <Text className="text-rs-green font-bold text-sm">View All</Text>
+        <Text className="text-sm font-bold text-rs-green">View All</Text>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row">
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        className="flex-row"
+        // --- SNAPPING PROPS ADDED HERE ---
+        snapToInterval={340} // 320px (card width) + 20px (mr-5)
+        snapToAlignment="start"
+        decelerationRate="normal"
+        // disableIntervalMomentum={true} // Prevents swiping past multiple cards at once
+        // ---------------------------------
+      >
         {routes.map((route) => (
-          <View key={route.id} className="mr-5 w-[320px] h-[450px] rounded-5xl overflow-hidden shadow-xl shadow-black/20">
-            <ImageBackground source={{ uri: route.img }} className="flex-1 p-6 justify-between">
+          <View key={route.id} className="mr-5 h-[450px] w-[320px] overflow-hidden rounded-[32px] shadow-xl shadow-black/20">
+            <ImageBackground source={{ uri: route.img }} className="flex-1 justify-between p-6">
               
               {/* Top Info Tag */}
-              <View className="flex-row items-center bg-white/20 self-start p-3 rounded-full border border-white/30">
-                <View className="bg-rs-green p-2 rounded-full mr-3">
+              <View className="self-start flex-row items-center rounded-full border border-white/30 bg-white/20 p-3">
+                <View className="mr-3 rounded-full bg-rs-green p-2">
                   <FontAwesome6 name="map-location-dot" size={14} color="white" />
                 </View>
                 <View>
-                  <Text className="text-white font-bold text-xs">{route.name}</Text>
-                  <Text className="text-white/80 text-[10px]">{route.location}</Text>
+                  <Text className="text-xs font-bold text-white">{route.name}</Text>
+                  <Text className="text-[10px] text-white/80">{route.location}</Text>
                 </View>
               </View>
 
@@ -39,11 +49,11 @@ const DemoActiveSyncs = () => {
                     <Image 
                       key={i}
                       source={{ uri: `https://i.pravatar.cc/100?u=${route.id}${i}` }}
-                      className="w-10 h-10 rounded-full border-2 border-white"
+                      className="h-10 w-10 rounded-full border-2 border-white"
                     />
                   ))}
                 </View>
-                <Text className="ml-3 text-white font-bold text-sm">
+                <Text className="ml-3 text-sm font-bold text-white">
                   {route.buddies}+ Synced
                 </Text>
               </View>

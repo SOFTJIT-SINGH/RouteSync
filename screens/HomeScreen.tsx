@@ -1,22 +1,59 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+// screens/HomeScreen.tsx
+import React, { useState, useCallback } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons';
 
-// Note: Adjust the import paths (../ means go up one folder)
+// Components
 import Navbar from '../components/Navbar';
 import HeroButtons from '../components/HeroButtons';
 import ActiveSyncs from '../components/ActiveSyncs';
 import BuddyMatch from '../components/BuddyMatch';
 import AddItinerary from '../components/AddItinerary';
+import FilterModal from '../components/FilterModal';
+import DemoActiveSyncs from '../components/DemoActiveSyncs';
+import DemoBuddyMatch from '../components/DemoBuddyMatch';
 
-const HomeScreen = ({ navigation }: any) => {
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../types/navigation';
+
+type Props = NativeStackScreenProps<RootStackParamList, 'HomeDashboard'>;
+
+const HomeScreen = ({ navigation }: Props) => {
+  const [modalVisible, setModalVisible] = useState(false);
+  
+  // Refresh State
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Pull-to-refresh handler
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    // Incrementing this key forces child components to remount and re-fetch data
+    setRefreshKey((prevKey) => prevKey + 1);
+    
+    // Simulate a slight delay so the UI spinner has time to show smoothly
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 300); 
+  }, []);
+
   return (
-    <SafeAreaView className="bg-rs-bg flex-1">
-      <StatusBar style="dark" />
-      <ScrollView className="px-5">
+    <SafeAreaView className="flex-1 bg-rs-bg">
+      <ScrollView 
+        className="px-5" 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh} 
+            tintColor="#30AF5B" 
+            colors={['#30AF5B']} 
+          />
+        }
+      >
         <Navbar />
-
+        
         <View className="my-8">
           <Text className="text-4xl font-bold leading-tight text-rs-dark">
             Route<Text className="text-rs-green">Sync</Text>
@@ -26,26 +63,34 @@ const HomeScreen = ({ navigation }: any) => {
           </Text>
         </View>
 
-        <HeroButtons />
-        <ActiveSyncs />
-        <AddItinerary />
-
-        {/* Clicking BuddyMatch will now take you to the Chat screen */}
-        <TouchableOpacity onPress={() => navigation.navigate('Chat')}>
-          <BuddyMatch />
+        <TouchableOpacity 
+          onPress={() => setModalVisible(true)}
+          className="self-end rounded-2xl border border-rs-bg bg-white p-3 shadow-sm"
+        >
+          <Ionicons name="options-outline" size={24} color="#30AF5B" />
         </TouchableOpacity>
 
-        {/* JSM Inspired Card */}
-        <View className="relative mt-10 mb-10 overflow-hidden rounded-5xl bg-rs-green p-8">
+        <HeroButtons />
+        
+        {/* Real Data Components - Passing refreshKey to force remount on pull */}
+        <DemoActiveSyncs />
+        <ActiveSyncs key={`active-syncs-${refreshKey}`} />
+        <AddItinerary />
+
+        <TouchableOpacity onPress={() => navigation.navigate('Chat')}>
+          <DemoBuddyMatch />
+          <BuddyMatch key={`buddy-match-${refreshKey}`} />
+        </TouchableOpacity>
+        
+        <View className="relative mb-20 mt-10 overflow-hidden rounded-[32px] bg-rs-green p-8">
           <Text className="text-2xl font-bold text-white">Feeling Lost?</Text>
           <Text className="mt-2 text-sm leading-6 text-white/80">
             Our RouteSync engine matches you with travelers who know the way.
           </Text>
-          <TouchableOpacity className="mt-6 self-start rounded-full bg-white px-6 py-3">
-            <Text className="font-bold text-rs-green">Get Started</Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
+      
+      <FilterModal visible={modalVisible} onClose={() => setModalVisible(false)} />
     </SafeAreaView>
   );
 };
