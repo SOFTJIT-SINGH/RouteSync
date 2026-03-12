@@ -56,7 +56,7 @@ const AuthScreen = ({ navigation }: any) => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-white px-6">
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
         className="flex-1"
@@ -69,8 +69,8 @@ const AuthScreen = ({ navigation }: any) => {
           
           {/* Header Section */}
           <View className="items-center mt-12 mb-10">
-            <View className="bg-rs-bg p-6 rounded-[40px] mb-4">
-              <FontAwesome6 name="route" size={50} color="#30AF5B" />
+            <View className="bg-rs-bg p-6 rounded-2xl mb-4">
+              <FontAwesome6 name="route" size={50} color="#30AF5B"/>
             </View>
             <Text className="text-3xl font-bold text-rs-dark">
               Route<Text className="text-rs-green">Sync</Text>
@@ -84,7 +84,7 @@ const AuthScreen = ({ navigation }: any) => {
               {isLogin ? 'Welcome Back' : 'Join the Tribe'}
             </Text>
 
-            <View className="bg-rs-bg flex-row items-center px-5 py-4 rounded-3xl mb-4 border border-rs-green/5">
+            <View className="bg-rs-bg flex-row items-center px-5 py-4 rounded-2xl mb-4 border border-rs-green/5">
               <Ionicons name="mail-outline" size={20} color="#7B7B7B" />
               <TextInput 
                 placeholder="Email Address"
@@ -96,7 +96,7 @@ const AuthScreen = ({ navigation }: any) => {
               />
             </View>
 
-            <View className="bg-rs-bg flex-row items-center px-5 py-4 rounded-3xl mb-6 border border-rs-green/5">
+            <View className="bg-rs-bg flex-row items-center px-5 py-4 rounded-2xl mb-6 border border-rs-green/5">
               <Ionicons name="lock-closed-outline" size={20} color="#7B7B7B" />
               <TextInput 
                 placeholder="Password"
@@ -111,12 +111,12 @@ const AuthScreen = ({ navigation }: any) => {
               onPress={handleAuth} 
               disabled={loading}
               activeOpacity={0.8}
-              className={`py-5 rounded-3xl items-center ${loading ? 'bg-rs-green/70' : 'bg-rs-green'}`}
+              className={`py-5 rounded-2xl items-center ${loading ? 'bg-rs-green/70' : 'bg-rs-green'}`}
             >
               {loading ? (
                 <ActivityIndicator color="white" />
               ) : (
-                <Text className="text-white font-bold text-lg">
+                <Text className="text-white font-bold text-xl">
                   {isLogin ? 'Sign In' : 'Create Account'}
                 </Text>
               )}
@@ -126,7 +126,7 @@ const AuthScreen = ({ navigation }: any) => {
               onPress={() => setIsLogin(!isLogin)}
               className="mt-8 mb-10 items-center"
             >
-              <Text className="text-rs-gray">
+              <Text className="text-rs-gray mt-2">
                 {isLogin ? "Don't have an account? " : "Already a member? "}
                 <Text className="text-rs-green font-bold">
                   {isLogin ? 'Sign Up' : 'Log In'}

@@ -126,9 +126,9 @@ const Drawer = createDrawerNavigator();
 
 function MainStack() {
   return (
-    <Stack.Navigator initialRouteName="HomeDashboard" screenOptions={{ headerShown: false }}>
-    {/* <Stack.Navigator initialRouteName="Auth" screenOptions={{ headerShown: false }}> */}
-      {/* <Stack.Screen name="Auth" component={AuthScreen} /> */}
+    // <Stack.Navigator initialRouteName="HomeDashboard" screenOptions={{ headerShown: false }}>
+    <Stack.Navigator initialRouteName="Auth" screenOptions={{ headerShown: false }}> 
+      <Stack.Screen name="Auth" component={AuthScreen} />
       <Stack.Screen name="HomeDashboard" component={HomeScreen} />
       <Stack.Screen name="Chat" component={ChatScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
