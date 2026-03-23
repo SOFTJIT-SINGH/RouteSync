@@ -80,7 +80,7 @@ const ChatScreen = ({ route }: any) => {
     <SafeAreaView className="flex-1 bg-white">
       {/* 1. Use KeyboardAvoidingView as a wrapper for the WHOLE screen content after the header */}
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : -}
         style={{ flex: 1 }}
         // This offset is key. Adjust this number (e.g., 90 or 100) based on your header height
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
