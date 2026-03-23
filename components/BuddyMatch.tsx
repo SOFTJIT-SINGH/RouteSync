@@ -1,112 +1,84 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { FontAwesome6, Ionicons } from '@expo/vector-icons';
-import { supabase } from '../lib/supabase';
+import { useNavigation } from '@react-navigation/native';
+// Notice the 'as BuddyMatchType' alias here!
+import { getPotentialBuddies, sendSyncRequest, BuddyMatch as BuddyMatchType } from '../lib/services/tripService';
 
 const BuddyMatch = () => {
-  const [matches, setMatches] = useState<any[]>([]);
+  // Using the new alias here
+  const [matches, setMatches] = useState<BuddyMatchType[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigation = useNavigation<any>();
 
   useEffect(() => {
-    calculateMatches();
+    fetchMatches();
   }, []);
 
-  const calculateMatches = async () => {
-    try {
-      setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // 1. Get the Current User's latest trip to compare against
-      const { data: myTrip } = await supabase
-        .from('trips')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      // 2. Fetch other travelers' trips
-      const { data: others, error } = await supabase
-        .from('trips')
-        .select(`
-          *,
-          users (id, full_name, avatar_url, interests)
-        `)
-        .neq('user_id', user.id) // Don't match with yourself
-        .eq('visibility', 'public');
-
-      if (error) throw error;
-
-      // 3. Simple Matching Algorithm
-      const scoredMatches = others.map((trip: any) => {
-        let score = 0;
-
-        if (myTrip) {
-          // Destination Match (40 pts)
-          if (trip.destination.toLowerCase() === myTrip.destination.toLowerCase()) score += 40;
-
-          // Budget Match (30 pts) - Within 20% range
-          const budgetDiff = Math.abs(trip.budget_min - myTrip.budget_min);
-          if (budgetDiff < (myTrip.budget_min * 0.2)) score += 30;
-
-          // Interest Overlap (30 pts)
-          const commonInterests = trip.users.interests?.filter((i: string) => 
-            myTrip.users?.interests?.includes(i)
-          );
-          if (commonInterests?.length > 0) score += 30;
-        } else {
-          score = Math.floor(Math.random() * 20) + 70; // Fallback score if user hasn't made a trip
-        }
-
-        return { ...trip, syncScore: score };
-      }).sort((a, b) => b.syncScore - a.syncScore);
-
-      setMatches(scoredMatches);
-    } catch (err: any) {
-      console.error(err.message);
-    } finally {
-      setLoading(false);
-    }
+  const fetchMatches = async () => {
+    setLoading(true);
+    const realMatches = await getPotentialBuddies();
+    setMatches(realMatches);
+    setLoading(false);
   };
 
-  if (loading) return <ActivityIndicator size="small" color="#30AF5B" className="mt-10" />;
+  const handleConnect = async (match: BuddyMatchType) => {
+    const result = await sendSyncRequest(match.user.id, match.route.id);
+    
+    if (result.success) {
+      Alert.alert(
+        "Sync Request Sent!", 
+        `We've notified ${match.user.full_name} that you want to connect.`,
+        [{ text: "OK", onPress: () => navigation.navigate('Chat') }]
+      );
+    } else {
+      Alert.alert("Error", "Could not send request at this time.");
+    }
+  };
 
   return (
     <View className="mt-10 mb-10">
       <View className="flex-row justify-between items-center mb-5">
-        <Text className="text-2xl font-bold text-rs-dark">Top Syncs</Text>
-        <TouchableOpacity onPress={calculateMatches}>
-          <Ionicons name="refresh-circle" size={28} color="#30AF5B" />
+        <Text className="text-2xl font-bold text-gray-900">Top Syncs For You</Text>
+        <TouchableOpacity onPress={fetchMatches} className="p-1">
+          <Ionicons name="refresh-circle" size={32} color="#30AF5B" />
         </TouchableOpacity>
       </View>
 
-      {matches.map((match) => (
-        <View key={match.id} className="bg-white p-5 rounded-5xl mb-4 shadow-sm border border-rs-bg flex-row items-center">
-          <Image 
-            source={{ uri: match.users?.avatar_url || 'https://i.pravatar.cc/150' }} 
-            className="w-16 h-16 rounded-full border-2 border-rs-green" 
-          />
+      {loading ? (
+        <ActivityIndicator size="large" color="#30AF5B" className="my-8" />
+      ) : matches.length === 0 ? (
+        <View className="bg-white p-6 rounded-3xl shadow-sm items-center justify-center">
+          <Text className="text-gray-500 font-medium">No matches found yet.</Text>
+        </View>
+      ) : (
+        matches.map((match) => (
+          <View key={match.route.id} className="bg-white p-5 rounded-3xl mb-4 shadow-sm border border-gray-100 flex-row items-center">
+            <Image 
+              source={{ uri: match.user.avatar_url || 'https://i.pravatar.cc/150' }} 
+              className="w-16 h-16 rounded-full border-2 border-[#30AF5B]" 
+            />
 
-          <View className="flex-1 ml-4">
-            <View className="flex-row items-center justify-between">
-              <Text className="text-lg font-bold text-rs-dark">{match.users?.full_name || 'Traveler'}</Text>
-              <View className="bg-rs-bg px-3 py-1 rounded-full border border-rs-green/20">
-                <Text className="text-rs-green font-bold text-xs">{match.syncScore}% Match</Text>
+            <View className="flex-1 ml-4">
+              <View className="flex-row items-center justify-between">
+                <Text className="text-lg font-bold text-gray-900">{match.user.full_name}</Text>
+                <View className="bg-green-50 px-3 py-1.5 rounded-full border border-green-200">
+                  <Text className="text-[#30AF5B] font-bold text-xs">{match.matchPercentage}% Match</Text>
+                </View>
               </View>
+
+              <Text className="text-sm text-gray-500 mt-1 font-medium">Heading to {match.route.destination}</Text>
             </View>
 
-            <Text className="text-xs text-rs-gray mt-1">Heading to {match.destination}</Text>
+            <TouchableOpacity 
+              className="ml-3 bg-[#30AF5B] p-3.5 rounded-2xl shadow-sm"
+              onPress={() => handleConnect(match)}
+            >
+              <FontAwesome6 name="bolt-lightning" size={18} color="white" />
+            </TouchableOpacity>
           </View>
-
-          <TouchableOpacity 
-            className="ml-2 bg-rs-green p-3 rounded-2xl shadow-lg shadow-green-900/30"
-            onPress={() => Alert.alert("Sync Request", `Send a match request to ${match.users?.full_name}?`)}
-          >
-            <FontAwesome6 name="bolt-lightning" size={16} color="white" />
-          </TouchableOpacity>
-        </View>
-      ))}
+        ))
+      )}
     </View>
   );
 };

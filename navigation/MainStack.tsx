@@ -1,3 +1,4 @@
+// navigation/MainStack.tsx
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
@@ -5,6 +6,10 @@ import HomeScreen from '../screens/HomeScreen';
 import ChatScreen from '../screens/ChatScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import Sidebar from '../components/Sidebar';
+
+// Import the new screens
+import FindBuddyScreen from '../screens/FindBuddyScreen';
+import SyncRouteScreen from '../screens/SyncRouteScreen';
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -26,6 +31,9 @@ export default function MainStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Dashboard" component={DashboardDrawer} />
       <Stack.Screen name="Chat" component={ChatScreen} />
+      {/* Add new screens here so they sit on top of the drawer */}
+      <Stack.Screen name="FindBuddy" component={FindBuddyScreen} />
+      <Stack.Screen name="SyncRoute" component={SyncRouteScreen} />
     </Stack.Navigator>
   );
 }
