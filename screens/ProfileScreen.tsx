@@ -13,39 +13,41 @@ export default function ProfileScreen({ navigation }: any) {
     fetchProfileData();
   }, []);
 
-  const fetchProfileData = async () => {
-    setLoading(true);
-    try {
-      // 1. Get the currently logged-in user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+ const fetchProfileData = async () => {
+  setLoading(true);
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
 
-      // 2. Fetch their details from the profiles table
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+    // FIX: Use maybeSingle() instead of single()
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .maybeSingle(); 
 
-      if (profileError) throw profileError;
+    if (profileError) throw profileError;
+
+    // If no profile exists, create a fallback so the app doesn't crash
+    if (!profileData) {
+      setProfile({ full_name: 'New Traveler', avatar_url: 'https://i.pravatar.cc/150', bio: 'Please update your profile.' });
+    } else {
       setProfile(profileData);
-
-      // 3. Fetch any trips they have created
-      const { data: tripsData, error: tripsError } = await supabase
-        .from('trips')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (tripsError) throw tripsError;
-      setMyTrips(tripsData || []);
-
-    } catch (error: any) {
-      console.error('Error fetching profile:', error);
-    } finally {
-      setLoading(false);
     }
-  };
+
+    const { data: tripsData } = await supabase
+      .from('trips')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    setMyTrips(tripsData || []);
+  } catch (error: any) {
+    console.error('Error fetching profile:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleLogout = async () => {
     Alert.alert('Log Out', 'Are you sure you want to log out?', [
