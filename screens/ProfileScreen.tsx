@@ -110,7 +110,7 @@ export default function ProfileScreen({ navigation }: any) {
         <View className="px-5 pb-10">
           <View className="flex-row justify-between items-center mb-4">
             <Text className="text-lg font-bold text-gray-900">My Routes</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('SyncRoute')}>
+            <TouchableOpacity onPress={() => navigation.navigate('AddTrip')}>
               <Ionicons name="add-circle" size={32} color="#30AF5B" />
             </TouchableOpacity>
           </View>
@@ -120,7 +120,7 @@ export default function ProfileScreen({ navigation }: any) {
                <Text className="text-gray-500 mb-3 text-center text-base">You haven&apos;t planned any trips yet.</Text>
                <TouchableOpacity 
                  className="bg-[#30AF5B] px-5 py-2.5 rounded-xl shadow-sm"
-                 onPress={() => navigation.navigate('SyncRoute')}
+                 onPress={() => navigation.navigate('AddTrip')}
                >
                  <Text className="text-white font-bold">Plan a Trip</Text>
                </TouchableOpacity>
