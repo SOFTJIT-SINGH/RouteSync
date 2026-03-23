@@ -44,7 +44,7 @@ export default function HomeScreen({ navigation }: any) {
         </View>
 
         {/* 4. Active Syncs */}
-        <View className="mb-10">
+        <View className="mb-2">
           <View className="px-6 flex-row justify-between items-center mb-4">
             <Text className="text-xl font-bold text-gray-900 tracking-tight">Active Syncs</Text>
             <TouchableOpacity>
@@ -63,6 +63,7 @@ export default function HomeScreen({ navigation }: any) {
         </View>
 
         {/* 6. Buddy Matches */}
+        {/* 6. Buddy Matches */}
         <View className="px-6 mb-4">
           <View className="flex-row justify-between items-center mb-4">
             <View>
@@ -70,7 +71,7 @@ export default function HomeScreen({ navigation }: any) {
               <Text className="text-sm text-gray-500 mt-0.5 font-medium">Travelers heading your way</Text>
             </View>
             
-            {/* Filter Button - Contextually placed and properly sized */}
+            {/* Filter Button */}
             <TouchableOpacity 
               onPress={() => setModalVisible(true)}
               className="bg-white w-10 h-10 rounded-xl border border-gray-200 shadow-sm items-center justify-center"
@@ -79,8 +80,19 @@ export default function HomeScreen({ navigation }: any) {
             </TouchableOpacity>
           </View>
           
+          {/* The Match Card */}
           <TouchableOpacity activeOpacity={0.95} onPress={() => navigation.navigate('Chat')}>
             <BuddyMatch />
+          </TouchableOpacity>
+
+          {/* NEW: See All Matches Button */}
+          <TouchableOpacity 
+            activeOpacity={0.8}
+            className="mt-4 py-3.5 bg-green-50 rounded-[16px] border border-green-100 items-center flex-row justify-center"
+            onPress={() => navigation.navigate('Matches')}
+          >
+            <Text className="text-[#30AF5B] font-bold text-sm mr-1.5">See all matches</Text>
+            <Feather name="arrow-right" size={16} color="#30AF5B" />
           </TouchableOpacity>
         </View>
 

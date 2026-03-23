@@ -1,114 +1,48 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, Image } from 'react-native';
+import React from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { FontAwesome6, Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
-import * as Haptics from 'expo-haptics';
-import { supabase } from '../lib/supabase';
+import { useNavigation } from '@react-navigation/native'; // 1. Import this!
 
-const AddItinerary = () => {
-  const [loading, setLoading] = useState(false);
-  const [destination, setDestination] = useState('');
-  const [source, setSource] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [budget, setBudget] = useState('');
-  const [imageUri, setImageUri] = useState<string | null>(null);
-
-  const pickImage = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [16, 9],
-      quality: 0.7, // Compress for faster upload
-    });
-
-    if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
-    }
-  };
-
-  const handleAddTrip = async () => {
-    if (!destination || !source || !startDate || !budget) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      return Alert.alert('Missing Fields', 'Please fill in all core details.');
-    }
-
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    setLoading(true);
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Authentication required.');
-
-      // Note: If you have Supabase Storage setup, you would upload the imageUri here first
-      // and retrieve the public URL to save in the trips table.
-
-      const { error } = await supabase.from('trips').insert([{
-        user_id: user.id,
-        source,
-        destination,
-        start_date: startDate,
-        budget_min: parseFloat(budget),
-        visibility: 'public',
-        // image_url: uploadedImageUrl (Implementation required in Supabase Storage)
-      }]);
-
-      if (error) throw error;
-
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert('Success!', 'Your journey has been synced to the community.');
-      
-      setDestination(''); setSource(''); setStartDate(''); setBudget(''); setImageUri(null);
-
-    } catch (error: any) {
-      Alert.alert('Error', error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+export default function AddItinerary() {
+  const navigation = useNavigation<any>(); // 2. Initialize it
 
   return (
-    <View className="mt-10 bg-white p-6 rounded-3xl border border-rs-bg shadow-sm">
-      <View className="flex-row items-center mb-6">
-        <View className="bg-rs-bg p-3 rounded-2xl mr-4">
-          <FontAwesome6 name="map-location-dot" size={20} color="#30AF5B" />
-        </View>
-        <Text className="text-xl font-bold text-rs-dark">Sync New Journey</Text>
-      </View>
+    <View className="bg-gray-900 rounded-[32px] p-6 relative overflow-hidden shadow-xl shadow-gray-900/20">
+      {/* ... (Keep your existing background glow views) ... */}
+      <View className="absolute -right-12 -top-12 bg-white/5 w-40 h-40 rounded-full blur-3xl" />
+      <View className="absolute -right-4 -bottom-10 bg-[#30AF5B]/20 w-32 h-32 rounded-full blur-2xl" />
 
-      <View className="space-y-4">
-        {/* Native Image Picker */}
-        <TouchableOpacity 
-          onPress={pickImage}
-          className="h-32 bg-rs-bg rounded-2xl border-2 border-dashed border-rs-green/30 items-center justify-center overflow-hidden mb-4"
-        >
-          {imageUri ? (
-            <Image source={{ uri: imageUri }} className="w-full h-full" />
-          ) : (
-            <>
-              <Ionicons name="image-outline" size={32} color="#7B7B7B" />
-              <Text className="text-rs-gray font-medium mt-2">Add Cover Photo</Text>
-            </>
-          )}
-        </TouchableOpacity>
+      <View className="flex-row justify-between items-center z-10">
+        <View className="flex-1 pr-4">
+          <View className="bg-white/10 self-start px-3 py-1.5 rounded-xl mb-3 border border-white/10 backdrop-blur-sm">
+            <Text className="text-white text-[10px] font-black uppercase tracking-widest">Plan a Trip</Text>
+          </View>
+          <Text className="text-2xl font-black text-white tracking-tight mb-2 leading-[30px]">
+            Got a destination{"\n"}in mind?
+          </Text>
+          <Text className="text-gray-400 text-sm font-medium mb-6 leading-relaxed pr-2">
+            Draft your itinerary and find the perfect buddies to tag along.
+          </Text>
 
-        <TextInput placeholder="From" className="bg-rs-bg p-4 rounded-xl text-rs-dark font-medium mb-3" value={source} onChangeText={setSource} />
-        <TextInput placeholder="To" className="bg-rs-bg p-4 rounded-xl text-rs-dark font-medium mb-3" value={destination} onChangeText={setDestination} />
-
-        <View className="flex-row gap-3">
-          <TextInput placeholder="Date (YYYY-MM-DD)" className="flex-1 bg-rs-bg p-4 rounded-xl text-rs-dark font-medium" value={startDate} onChangeText={setStartDate} />
-          <TextInput placeholder="Budget (₹)" className="flex-1 bg-rs-bg p-4 rounded-xl text-rs-dark font-medium" value={budget} keyboardType="numeric" onChangeText={setBudget} />
+          <TouchableOpacity 
+            activeOpacity={0.85}
+            className="bg-[#30AF5B] py-3.5 px-5 rounded-[16px] flex-row items-center self-start shadow-sm shadow-green-900/50"
+            onPress={() => navigation.navigate('CreateTrip')} // 3. Wire it up!
+          >
+            <FontAwesome6 name="plus" size={14} color="white" />
+            <Text className="text-white font-bold text-sm ml-2">Create Itinerary</Text>
+          </TouchableOpacity>
         </View>
 
-        <TouchableOpacity 
-          onPress={handleAddTrip} disabled={loading}
-          className="bg-rs-green py-4 rounded-2xl mt-6 items-center shadow-lg"
-        >
-          {loading ? <ActivityIndicator color="white" /> : <Text className="text-white font-bold text-lg">Post Sync Route</Text>}
-        </TouchableOpacity>
+        <View className="justify-center items-center mr-2">
+           <View className="w-20 h-20 bg-white/5 rounded-full items-center justify-center border border-white/10 backdrop-blur-md relative">
+             <FontAwesome6 name="map-location-dot" size={32} color="#30AF5B" />
+             <View className="absolute -bottom-2 -right-2 bg-gray-800 p-2 rounded-full border-2 border-gray-900">
+               <Ionicons name="compass" size={18} color="white" />
+             </View>
+           </View>
+        </View>
       </View>
     </View>
   );
-};
-
-export default AddItinerary;
+}

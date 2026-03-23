@@ -1,64 +1,49 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
-import { FontAwesome6, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import React, { useState } from 'react';
+import { ScrollView, TouchableOpacity, Text, View } from 'react-native';
+import { Ionicons, Feather } from '@expo/vector-icons';
 
-const HeroButtons = () => {
-  const navigation = useNavigation<any>();
+export default function HeroButtons() {
+  // Set 'Discover' as the default active tab
+  const [activeTab, setActiveTab] = useState('Discover');
 
-  const hero = [
-    {
-      name: 'Find Buddy',
-      icon: <FontAwesome6 name="user-group" size={20} color="#30AF5B" />,
-      route: 'FindBuddy', 
-    },
-    {
-      name: 'Sync Route',
-      icon: <MaterialCommunityIcons name="map-marker-path" size={24} color="#30AF5B" />,
-      route: 'SyncRoute', 
-    },
-    {
-      name: 'Shared Gear',
-      icon: <MaterialIcons name="handshake" size={24} color="#30AF5B" />,
-      route: 'Marketplace', // Not built yet!
-    },
-    {
-      name: 'Messages',
-      icon: <MaterialIcons name="chat-bubble-outline" size={24} color="#30AF5B" />,
-      route: 'Chat',
-    },
+  // Array of tabs to map over cleanly
+  const tabs = [
+    { id: 'Discover', icon: 'compass', type: 'Ionicons' },
+    { id: 'Buddies', icon: 'people', type: 'Ionicons' },
+    { id: 'My Trips', icon: 'map', type: 'Feather' },
+    { id: 'Community', icon: 'chatbubbles', type: 'Ionicons' },
   ];
 
-  const handlePress = (route?: string) => {
-    if (route === 'Marketplace') {
-      Alert.alert("Coming Soon", "The Shared Gear marketplace is currently in development!");
-      return;
-    }
-    if (route) {
-      navigation.navigate(route);
-    }
-  };
-
   return (
-    <View className='flex-row justify-between mt-4'>
-      {hero.map((item, index) => (
-        <TouchableOpacity 
-          key={index} 
-          activeOpacity={0.8}
-          onPress={() => handlePress(item.route)}
-          className='bg-white p-4 w-[23%] rounded-3xl items-center justify-center shadow-sm'
-          style={{ shadowColor: '#30AF5B', shadowOpacity: 0.05, shadowRadius: 10 }}
-        >
-          <View className="bg-[#F0F9F0] p-3 rounded-full mb-2">
-            {item.icon}
-          </View>
-          <Text className='font-bold text-[10px] text-[#292C27] text-center'>
-            {item.name}
-          </Text>
-        </TouchableOpacity>
-      ))}
+    <View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 24 }}>
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.id;
+          const IconComponent = tab.type === 'Ionicons' ? Ionicons : Feather;
+          
+          return (
+            <TouchableOpacity 
+              key={tab.id}
+              activeOpacity={0.8}
+              onPress={() => setActiveTab(tab.id)} // This makes it interactive!
+              className={`flex-row items-center px-5 py-3.5 rounded-[16px] mr-3 border transition-colors ${
+                isActive 
+                  ? 'bg-gray-900 border-gray-900 shadow-md shadow-gray-900/20' 
+                  : 'bg-white border-gray-100 shadow-sm shadow-gray-100'
+              }`}
+            >
+              <IconComponent 
+                name={tab.icon as any} 
+                size={18} 
+                color={isActive ? 'white' : '#1F2937'} 
+              />
+              <Text className={`font-bold ml-2 ${isActive ? 'text-white' : 'text-gray-900'}`}>
+                {tab.id}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
     </View>
   );
-};
-
-export default HeroButtons;
+}
