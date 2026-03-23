@@ -1,86 +1,77 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, Image, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
-import { FontAwesome6, Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-// Notice the 'as BuddyMatchType' alias here!
-import { getPotentialBuddies, sendSyncRequest, BuddyMatch as BuddyMatchType } from '../lib/services/tripService';
+import React from 'react';
+import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
-const BuddyMatch = () => {
-  // Using the new alias here
-  const [matches, setMatches] = useState<BuddyMatchType[]>([]);
-  const [loading, setLoading] = useState(true);
-  const navigation = useNavigation<any>();
-
-  useEffect(() => {
-    fetchMatches();
-  }, []);
-
-  const fetchMatches = async () => {
-    setLoading(true);
-    const realMatches = await getPotentialBuddies();
-    setMatches(realMatches);
-    setLoading(false);
-  };
-
-  const handleConnect = async (match: BuddyMatchType) => {
-    const result = await sendSyncRequest(match.user.id, match.route.id);
-    
-    if (result.success) {
-      Alert.alert(
-        "Sync Request Sent!", 
-        `We've notified ${match.user.full_name} that you want to connect.`,
-        [{ text: "OK", onPress: () => navigation.navigate('Chat') }]
-      );
-    } else {
-      Alert.alert("Error", "Could not send request at this time.");
-    }
-  };
-
+export default function BuddyMatch() {
   return (
-    <View className="mt-10 mb-10">
-      <View className="flex-row justify-between items-center mb-5">
-        <Text className="text-2xl font-bold text-gray-900">Top Syncs For You</Text>
-        <TouchableOpacity onPress={fetchMatches} className="p-1">
-          <Ionicons name="refresh-circle" size={32} color="#30AF5B" />
-        </TouchableOpacity>
+    <View className="bg-white rounded-[32px] p-5 border border-gray-100 shadow-sm shadow-gray-200">
+      
+      {/* 1. Profile Header Row */}
+      <View className="flex-row items-center">
+        
+        {/* Avatar with Online Dot */}
+        <View className="relative">
+          <Image 
+            source={{ uri: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop' }} 
+            className="w-16 h-16 rounded-full bg-gray-200"
+          />
+          {/* Green Online Indicator */}
+          <View className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
+        </View>
+
+        {/* Identity & Match Score */}
+        <View className="ml-4 flex-1">
+          <View className="flex-row items-center justify-between">
+            <Text className="text-lg font-extrabold text-gray-900 tracking-tight">Priya Patel</Text>
+            
+            {/* The "Tinder-style" Match Pill */}
+            <View className="bg-green-50 px-2.5 py-1 rounded-lg border border-green-100 flex-row items-center">
+              <Ionicons name="flame" size={12} color="#30AF5B" />
+              <Text className="text-xs font-extrabold text-[#30AF5B] ml-1">94% Match</Text>
+            </View>
+          </View>
+          
+          <Text className="text-sm font-medium text-gray-500 mt-0.5">
+            Heading to <Text className="text-gray-900 font-bold">Goa</Text> • Dec 20
+          </Text>
+        </View>
+
       </View>
 
-      {loading ? (
-        <ActivityIndicator size="large" color="#30AF5B" className="my-8" />
-      ) : matches.length === 0 ? (
-        <View className="bg-white p-6 rounded-3xl shadow-sm items-center justify-center">
-          <Text className="text-gray-500 font-medium">No matches found yet.</Text>
+      {/* 2. Shared Interests (Vibe Check) */}
+      {/* Using 'flex-wrap' so pills automatically drop to the next line if they get too long */}
+      <View className="flex-row flex-wrap mt-5 gap-2">
+        <View className="bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100">
+          <Text className="text-xs font-semibold text-gray-600">📸 Photography</Text>
         </View>
-      ) : (
-        matches.map((match) => (
-          <View key={match.route.id} className="bg-white p-5 rounded-3xl mb-4 shadow-sm border border-gray-100 flex-row items-center">
-            <Image 
-              source={{ uri: match.user.avatar_url || 'https://i.pravatar.cc/150' }} 
-              className="w-16 h-16 rounded-full border-2 border-[#30AF5B]" 
-            />
+        <View className="bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100">
+          <Text className="text-xs font-semibold text-gray-600">🍕 Foodie</Text>
+        </View>
+        <View className="bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100">
+          <Text className="text-xs font-semibold text-gray-600">🌅 Sunsets</Text>
+        </View>
+      </View>
 
-            <View className="flex-1 ml-4">
-              <View className="flex-row items-center justify-between">
-                <Text className="text-lg font-bold text-gray-900">{match.user.full_name}</Text>
-                <View className="bg-green-50 px-3 py-1.5 rounded-full border border-green-200">
-                  <Text className="text-[#30AF5B] font-bold text-xs">{match.matchPercentage}% Match</Text>
-                </View>
-              </View>
-
-              <Text className="text-sm text-gray-500 mt-1 font-medium">Heading to {match.route.destination}</Text>
-            </View>
-
-            <TouchableOpacity 
-              className="ml-3 bg-[#30AF5B] p-3.5 rounded-2xl shadow-sm"
-              onPress={() => handleConnect(match)}
-            >
-              <FontAwesome6 name="bolt-lightning" size={18} color="white" />
-            </TouchableOpacity>
-          </View>
-        ))
-      )}
+      {/* 3. Social Proof & Call to Action */}
+      <View className="mt-5 flex-row items-center justify-between bg-gray-50 p-1.5 rounded-[20px] border border-gray-100">
+         
+         {/* Mutual Connections (Overlapping Avatars) */}
+         <View className="flex-row items-center ml-3">
+           <View className="flex-row -space-x-2 mr-2">
+              <Image source={{ uri: 'https://i.pravatar.cc/100?img=11' }} className="w-7 h-7 rounded-full border-2 border-white" />
+              <Image source={{ uri: 'https://i.pravatar.cc/100?img=12' }} className="w-7 h-7 rounded-full border-2 border-white" />
+           </View>
+           <Text className="text-xs font-bold text-gray-500">2 mutuals</Text>
+         </View>
+         
+         {/* Primary Action Button */}
+         {/* We use a View here instead of TouchableOpacity because the whole card in HomeScreen is already wrapped in a TouchableOpacity that navigates to Chat! */}
+         <View className="bg-[#30AF5B] px-5 py-2.5 rounded-[16px] shadow-sm shadow-green-200 flex-row items-center">
+           <Text className="text-white font-bold mr-2 text-sm">Say Hi</Text>
+           <Ionicons name="send" size={14} color="white" />
+         </View>
+         
+      </View>
     </View>
   );
-};
-
-export default BuddyMatch;
+}
