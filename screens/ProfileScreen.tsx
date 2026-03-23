@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 
 export default function ProfileScreen({ navigation }: any) {
@@ -13,134 +13,139 @@ export default function ProfileScreen({ navigation }: any) {
     fetchProfileData();
   }, []);
 
- const fetchProfileData = async () => {
-  setLoading(true);
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+  const fetchProfileData = async () => {
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    // FIX: Use maybeSingle() instead of single()
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .maybeSingle(); 
+      // FIX: maybeSingle() prevents the PGRST116 error if row is missing
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle(); 
 
-    if (profileError) throw profileError;
+      if (profileError) throw profileError;
+      setProfile(profileData || { full_name: 'Traveler', avatar_url: 'https://i.pravatar.cc/150' });
 
-    // If no profile exists, create a fallback so the app doesn't crash
-    if (!profileData) {
-      setProfile({ full_name: 'New Traveler', avatar_url: 'https://i.pravatar.cc/150', bio: 'Please update your profile.' });
-    } else {
-      setProfile(profileData);
+      const { data: tripsData } = await supabase
+        .from('trips')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      setMyTrips(tripsData || []);
+    } catch (error: any) {
+      console.error('Error fetching profile:', error);
+    } finally {
+      setLoading(false);
     }
-
-    const { data: tripsData } = await supabase
-      .from('trips')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-
-    setMyTrips(tripsData || []);
-  } catch (error: any) {
-    console.error('Error fetching profile:', error);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleLogout = async () => {
-    Alert.alert('Log Out', 'Are you sure you want to log out?', [
+    Alert.alert('Logout', 'Ready to end your session?', [
       { text: 'Cancel', style: 'cancel' },
-      { 
-        text: 'Log Out', 
-        style: 'destructive',
-        onPress: async () => {
-          // This tells Supabase to kill the session
-          await supabase.auth.signOut();
-        }
-      }
+      { text: 'Logout', style: 'destructive', onPress: async () => await supabase.auth.signOut() }
     ]);
   };
 
-  if (loading) {
-    return (
-      <SafeAreaView className="flex-1 bg-gray-50 justify-center items-center">
-        <ActivityIndicator size="large" color="#30AF5B" />
-      </SafeAreaView>
-    );
-  }
+  if (loading) return (
+    <View className="flex-1 bg-white justify-center items-center">
+      <ActivityIndicator size="large" color="#30AF5B" />
+    </View>
+  );
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <View className="px-5 pt-4 pb-4 flex-row items-center justify-between bg-white border-b border-gray-100 shadow-sm">
-        <Text className="text-2xl font-bold text-gray-900">My Profile</Text>
-        <TouchableOpacity onPress={handleLogout} className="p-2 bg-red-50 rounded-full">
-          <MaterialIcons name="logout" size={20} color="#EF4444" />
+    <SafeAreaView className="flex-1 bg-white">
+      {/* 1. TOP NAV */}
+      <View className="px-6 py-4 flex-row justify-between items-center">
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Ionicons name="chevron-back" size={28} color="#1F2937" />
+        </TouchableOpacity>
+        <Text className="text-xl font-bold text-gray-900">Profile</Text>
+        <TouchableOpacity onPress={handleLogout}>
+          <Ionicons name="log-out-outline" size={26} color="#EF4444" />
         </TouchableOpacity>
       </View>
 
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <View className="bg-white px-5 py-8 items-center border-b border-gray-100 shadow-sm">
-          <Image 
-            source={{ uri: profile?.avatar_url || 'https://i.pravatar.cc/150' }}
-            className="w-24 h-24 rounded-full border-4 border-[#30AF5B] mb-4"
-          />
-          <Text className="text-2xl font-bold text-gray-900 mb-1">
-            {profile?.full_name || 'Traveler'}
-          </Text>
-          
-          <View className="flex-row items-center bg-green-50 px-3 py-1.5 rounded-full mt-2 border border-green-200">
-            <Ionicons name="compass" size={16} color="#30AF5B" />
-            <Text className="text-[#30AF5B] font-bold text-sm ml-1">
-              {profile?.travel_style || 'Explorer'}
+      <ScrollView showsVerticalScrollIndicator={false} className="flex-1 px-6">
+        
+        {/* 2. PROFILE HEADER CARD */}
+        <View className="items-center py-6">
+          <View className="relative">
+            <Image 
+              source={{ uri: profile?.avatar_url }}
+              className="w-28 h-28 rounded-full border-4 border-white shadow-xl shadow-gray-400"
+            />
+            <TouchableOpacity className="absolute bottom-1 right-1 bg-[#30AF5B] p-2 rounded-full border-2 border-white">
+              <Ionicons name="camera" size={16} color="white" />
+            </TouchableOpacity>
+          </View>
+          <Text className="text-2xl font-extrabold text-gray-900 mt-4">{profile?.full_name}</Text>
+          <Text className="text-gray-500 font-medium">@{profile?.first_name?.toLowerCase() || 'traveler'}</Text>
+        </View>
+
+        {/* 3. BENTO INFO SECTION */}
+        <View className="flex-row justify-between mb-8">
+          <View className="bg-gray-50 p-4 rounded-3xl w-[48%] items-center border border-gray-100">
+            <MaterialCommunityIcons name="gender-male-female" size={24} color="#30AF5B" />
+            <Text className="text-gray-400 text-xs font-bold uppercase mt-2">Gender</Text>
+            <Text className="text-gray-900 font-bold">{profile?.gender || '—'}</Text>
+          </View>
+          <View className="bg-gray-50 p-4 rounded-3xl w-[48%] items-center border border-gray-100">
+            <Ionicons name="calendar" size={24} color="#30AF5B" />
+            <Text className="text-gray-400 text-xs font-bold uppercase mt-2">Birthday</Text>
+            <Text className="text-gray-900 font-bold">{profile?.dob || '—'}</Text>
+          </View>
+        </View>
+
+        {/* 4. BIO SECTION */}
+        <View className="mb-8">
+          <View className="flex-row justify-between items-center mb-3">
+            <Text className="text-lg font-bold text-gray-900">About Me</Text>
+            <TouchableOpacity><Text className="text-[#30AF5B] font-bold">Edit</Text></TouchableOpacity>
+          </View>
+          <View className="bg-gray-50 p-5 rounded-3xl border border-gray-100">
+            <Text className="text-gray-600 leading-relaxed">
+              {profile?.bio || "Tell the community about your travel vibe! Are you a backpacker or a luxury seeker?"}
             </Text>
           </View>
         </View>
 
-        <View className="px-5 py-6">
-          <Text className="text-lg font-bold text-gray-900 mb-2">About Me</Text>
-          <Text className="text-gray-600 leading-relaxed text-base">
-            {profile?.bio || 'Add a bio to tell other travelers about your travel style, interests, and what you look for in a buddy!'}
-          </Text>
-          
-          <TouchableOpacity className="mt-5 bg-gray-900 py-3.5 rounded-xl items-center shadow-sm">
-            <Text className="text-white font-bold text-base">Edit Profile</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View className="px-5 pb-10">
+        {/* 5. MY TRIPS SECTION */}
+        <View className="mb-10">
           <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-lg font-bold text-gray-900">My Routes</Text>
+            <Text className="text-lg font-bold text-gray-900">Planned Journeys</Text>
             <TouchableOpacity onPress={() => navigation.navigate('AddTrip')}>
               <Ionicons name="add-circle" size={32} color="#30AF5B" />
             </TouchableOpacity>
           </View>
 
           {myTrips.length === 0 ? (
-             <View className="bg-white p-6 rounded-2xl border border-gray-200 items-center border-dashed">
-               <Text className="text-gray-500 mb-3 text-center text-base">You haven&apos;t planned any trips yet.</Text>
-               <TouchableOpacity 
-                 className="bg-[#30AF5B] px-5 py-2.5 rounded-xl shadow-sm"
-                 onPress={() => navigation.navigate('AddTrip')}
-               >
-                 <Text className="text-white font-bold">Plan a Trip</Text>
-               </TouchableOpacity>
-             </View>
+            <TouchableOpacity 
+              onPress={() => navigation.navigate('AddTrip')}
+              className="border-2 border-dashed border-gray-200 rounded-3xl p-8 items-center"
+            >
+              <Ionicons name="map-outline" size={32} color="#D1D5DB" />
+              <Text className="text-gray-400 font-bold mt-2">Plan your first trip</Text>
+            </TouchableOpacity>
           ) : (
             myTrips.map((trip) => (
-              <View key={trip.id} className="bg-white p-4 rounded-2xl mb-3 border border-gray-100 shadow-sm flex-row justify-between items-center">
-                <View>
-                  <Text className="font-bold text-gray-900 text-base">{trip.destination}</Text>
-                  <Text className="text-gray-500 text-xs mt-1 font-medium">{trip.start_date} to {trip.end_date}</Text>
+              <View key={trip.id} className="bg-white p-5 rounded-3xl mb-4 border border-gray-100 shadow-sm flex-row items-center">
+                <View className="bg-green-50 p-3 rounded-2xl">
+                  <MaterialCommunityIcons name="map-marker-path" size={24} color="#30AF5B" />
                 </View>
-                <View className="bg-green-50 px-3 py-1.5 rounded-lg border border-green-200">
-                  <Text className="text-[#30AF5B] font-bold text-xs">₹{trip.budget_min}</Text>
+                <View className="ml-4 flex-1">
+                  <Text className="text-base font-bold text-gray-900">{trip.destination}</Text>
+                  <Text className="text-xs text-gray-500">{trip.start_date} • ₹{trip.budget_min}</Text>
                 </View>
+                <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />
               </View>
             ))
           )}
         </View>
+
       </ScrollView>
     </SafeAreaView>
   );

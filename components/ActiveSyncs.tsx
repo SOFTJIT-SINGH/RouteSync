@@ -1,121 +1,79 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, ImageBackground, Image, ActivityIndicator } from 'react-native';
-import { FontAwesome6 } from '@expo/vector-icons';
+import React from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { Ionicons, Feather } from '@expo/vector-icons';
 
-const ActiveSyncs = () => {
-  const [routes, setRoutes] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchTrips();
-  }, []);
-
-  const fetchTrips = async () => {
-    setLoading(true);
-    
-    // Simulating a database fetch with rich mock data
-    setTimeout(() => {
-      const mockData = [
-        {
-          id: '1',
-          destination: 'Leh Ladakh',
-          start_date: 'Oct 12, 2026',
-          budget_min: '15,000',
-          img: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?q=80&w=800&auto=format&fit=crop',
-          users: { full_name: 'Aarav S.', avatar_url: 'https://i.pravatar.cc/150?u=aarav' }
-        },
-        {
-          id: '2',
-          destination: 'Kasol Valley',
-          start_date: 'Nov 05, 2026',
-          budget_min: '8,000',
-          img: 'https://images.unsplash.com/photo-1595815771614-ade9d652a65d?q=80&w=800&auto=format&fit=crop',
-          users: { full_name: 'Neha R.', avatar_url: 'https://i.pravatar.cc/150?u=neha' }
-        },
-        {
-          id: '3',
-          destination: 'Goa Coast',
-          start_date: 'Dec 20, 2026',
-          budget_min: '20,000',
-          img: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?q=80&w=800&auto=format&fit=crop',
-          users: { full_name: 'Kabir D.', avatar_url: 'https://i.pravatar.cc/150?u=kabir' }
-        }
-      ];
-      setRoutes(mockData);
-      setLoading(false);
-    }, 800); // 800ms delay to show the loading state nicely
-  };
-
-  if (loading) {
-    return (
-      <View className="mt-10 items-center justify-center py-20">
-        <ActivityIndicator size="large" color="#30AF5B" />
-        <Text className="text-gray-500 mt-4 font-semibold">Finding active journeys...</Text>
-      </View>
-    );
+// Using the mock data we injected into your Supabase earlier
+const mockSyncs = [
+  {
+    id: '1',
+    destination: 'Manali, HP',
+    start_point: 'Chandigarh',
+    date: 'Oct 15 - Oct 22',
+    buddies: 2,
+    image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?q=80&w=600&auto=format&fit=crop'
+  },
+  {
+    id: '2',
+    destination: 'Spiti Valley',
+    start_point: 'Shimla',
+    date: 'Jun 10 - Jun 20',
+    buddies: 4,
+    image: 'https://images.unsplash.com/photo-1542601098-3adb3baeb1ec?q=80&w=600&auto=format&fit=crop'
   }
+];
 
+export default function ActiveSyncs() {
   return (
-    <View className="mt-10">
-      <View className="flex-row justify-between items-center mb-5">
-        <Text className="text-2xl font-bold text-gray-900">Active Syncs</Text>
-        <Text className="text-[#30AF5B] font-bold text-sm">View All</Text>
-      </View>
-
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false} 
-        className="flex-row"
-        snapToInterval={340} 
-        snapToAlignment="start"
-        decelerationRate="fast"
-      >
-        {routes.length > 0 ? (
-          routes.map((route) => (
-            <View 
-              key={route.id} 
-              className="mr-5 w-[320px] h-[450px] rounded-[32px] overflow-hidden shadow-sm"
-            >
-              <ImageBackground 
-                source={{ uri: route.img }} 
-                className="flex-1 p-6 justify-between bg-gray-900"
-                imageStyle={{ opacity: 0.8 }} // Darkens the image slightly so text is readable
-              >
-                <View className="flex-row items-center bg-white/20 self-start p-3 rounded-full border border-white/30 backdrop-blur-sm">
-                  <View className="bg-[#30AF5B] p-2 rounded-full mr-3">
-                    <FontAwesome6 name="map-location-dot" size={14} color="white" />
-                  </View>
-                  <View>
-                    <Text className="text-white font-bold text-xs">{route.destination}</Text>
-                    <Text className="text-white/90 text-[10px]">Starts: {route.start_date}</Text>
-                  </View>
-                </View>
-
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-row items-center">
-                    <Image 
-                      source={{ uri: route.users.avatar_url }}
-                      className="w-10 h-10 rounded-full border-2 border-white"
-                    />
-                    <Text className="ml-3 text-white font-bold text-sm shadow-sm">
-                      By {route.users.full_name}
-                    </Text>
-                  </View>
-                  <View className="bg-white px-3 py-1.5 rounded-xl shadow-sm">
-                    <Text className="text-[#30AF5B] font-bold text-xs">₹{route.budget_min}</Text>
-                  </View>
-                </View>
-              </ImageBackground>
+    <ScrollView 
+      horizontal 
+      showsHorizontalScrollIndicator={false}
+      // This is the magic line. It aligns the first card with your screen's px-6 padding, 
+      // but allows smooth edge-to-edge scrolling.
+      contentContainerStyle={{ paddingHorizontal: 24 }} 
+    >
+      {mockSyncs.map((sync, index) => (
+        <TouchableOpacity 
+          key={sync.id}
+          activeOpacity={0.95}
+          // The right margin separates the cards, but we don't add it to the very last card
+          className={`bg-white w-64 rounded-[24px] overflow-hidden border border-gray-100 shadow-sm shadow-gray-200 ${index !== mockSyncs.length - 1 ? 'mr-4' : ''}`}
+        >
+          {/* Top Image Section */}
+          <View className="relative">
+            <Image 
+              source={{ uri: sync.image }} 
+              className="w-full h-36 bg-gray-100"
+              resizeMode="cover"
+            />
+            {/* Floating Badge */}
+            <View className="absolute top-3 left-3 bg-white/95 px-2.5 py-1.5 rounded-lg flex-row items-center shadow-sm">
+              <Ionicons name="people" size={14} color="#30AF5B" />
+              <Text className="text-xs font-bold text-gray-800 ml-1.5">{sync.buddies} Joined</Text>
             </View>
-          ))
-        ) : (
-          <View className="w-[320px] h-[100px] items-center justify-center bg-gray-100 rounded-[32px]">
-             <Text className="text-gray-500 italic text-base">No active syncs right now.</Text>
           </View>
-        )}
-      </ScrollView>
-    </View>
-  );
-};
 
-export default ActiveSyncs;
+          {/* Bottom Info Section */}
+          <View className="p-4">
+            <Text className="text-lg font-extrabold text-gray-900 mb-1.5 tracking-tight" numberOfLines={1}>
+              {sync.destination}
+            </Text>
+            
+            <View className="flex-row items-center mb-3">
+              <Feather name="map-pin" size={14} color="#9CA3AF" />
+              <Text className="text-sm font-medium text-gray-500 ml-1.5" numberOfLines={1}>
+                From {sync.start_point}
+              </Text>
+            </View>
+
+            {/* Date Pill */}
+            <View className="flex-row items-center bg-gray-50 self-start px-3 py-1.5 rounded-lg border border-gray-100">
+              <Feather name="calendar" size={12} color="#30AF5B" />
+              <Text className="text-xs font-bold text-gray-700 ml-2">{sync.date}</Text>
+            </View>
+          </View>
+
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
+  );
+}

@@ -11,6 +11,7 @@ import Sidebar from '../components/Sidebar';
 import FindBuddyScreen from '../screens/FindBuddyScreen';
 import SyncRouteScreen from '../screens/SyncRouteScreen';
 import AddTripScreen from '../screens/AddTripScreen';
+import SocialScreen from '../screens/SocialScreen';
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -33,6 +34,7 @@ export default function MainStack() {
       <Stack.Screen name="Chat" component={ChatScreen} />
       {/* Add new screens here so they sit on top of the drawer */}
       <Stack.Screen name="AddTrip" component={AddTripScreen} />
+      <Stack.Screen name="SocialScreen" component={SocialScreen} />
       <Stack.Screen name="FindBuddy" component={FindBuddyScreen} />
       <Stack.Screen name="SyncRoute" component={SyncRouteScreen} />
     </Stack.Navigator>

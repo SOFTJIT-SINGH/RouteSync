@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+// navigation/RootNavigator.tsx
+import React, { useState, useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 import AuthStack from './AuthStack';
 import MainStack from './MainStack';
+import { NavigationContainer } from '@react-navigation/native';
 
 export default function RootNavigator() {
   const [session, setSession] = useState<any>(null);
@@ -20,14 +21,17 @@ export default function RootNavigator() {
     });
   }, []);
 
+  
+
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center bg-rs-bg">
+      <View className="flex-1 justify-center items-center bg-white">
         <ActivityIndicator size="large" color="#30AF5B" />
       </View>
     );
   }
 
+  // No <NavigationContainer> here!
   return (
     <NavigationContainer>
       {session ? <MainStack /> : <AuthStack />}
