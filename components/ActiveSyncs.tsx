@@ -138,8 +138,8 @@ const ActiveSyncs = () => {
               key={index}
               className={`h-2 rounded-full transition-all duration-300 ease-in-out ${
                 activeIndex === index 
-                  ? 'bg-[#30AF5B] w-6' // Active dot is a wider pill
-                  : 'bg-gray-300 w-2'  // Inactive dot is a small circle
+                  ? 'bg-[#30AF5B] w-6' 
+                  : 'bg-gray-300 w-2' 
               }`}
             />
           ))}

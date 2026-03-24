@@ -28,12 +28,13 @@ export default function HomeScreen({ navigation }: any) {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 40 }}
       >
-        {/* 2. Main Title - Balanced scaling */}
-        <View className="px-6 pt-2 pb-8">
-          <Text className="text-3xl font-extrabold text-gray-900 tracking-tight">
-            Route<Text className="text-[#30AF5B]">Sync</Text>
+       
+       {/*2. Main Title - Fixed Size */}
+        <View className="px-6 pt-2 pb-6">
+          <Text className="text-[40px] font-black text-gray-700 tracking-tighter leading-tight">
+            Route<Text className="text-[#30AF5B]">Sync</Text>.
           </Text>
-          <Text className="text-base text-gray-500 mt-1.5 font-medium leading-relaxed pr-4">
+          <Text className="text-base text-gray-500 mt-1 font-medium leading-relaxed pr-8">
             Find the perfect companion for your next adventure.
           </Text>
         </View>
@@ -45,12 +46,19 @@ export default function HomeScreen({ navigation }: any) {
 
         {/* 4. Active Syncs */}
         <View className="mb-2">
+          {/* 4. Active Syncs */}
+        <View className="mb-10">
           <View className="px-6 flex-row justify-between items-center mb-4">
             <Text className="text-xl font-bold text-gray-900 tracking-tight">Active Syncs</Text>
-            <TouchableOpacity>
+            
+            {/* WIRE THIS UP TO GO TO MATCHES OR A SPECIFIC SYNCS PAGE */}
+            <TouchableOpacity onPress={() => navigation.navigate('Matches')}>
               <Text className="text-[#30AF5B] font-semibold text-sm">See all</Text>
             </TouchableOpacity>
+            
           </View>
+          <ActiveSyncs />
+        </View>
           
           {/* Note: No px-6 wrapper here. ActiveSyncs needs to stretch to the edges 
               so the internal horizontal ScrollView doesn't clip on the sides. */}

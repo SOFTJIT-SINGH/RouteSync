@@ -1,196 +1,176 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, FontAwesome } from '@expo/vector-icons';
-import { supabase } from '../lib/supabase';
+import React, { useState, useRef } from 'react';
+import { 
+  View, Text, TouchableOpacity, Image, TextInput, 
+  FlatList, KeyboardAvoidingView, Platform, StatusBar 
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons, Feather } from '@expo/vector-icons';
 
-export default function ChatScreen({ route, navigation }: any) {
-  const scrollViewRef = useRef<ScrollView>(null);
+// Mock conversation data
+const INITIAL_MESSAGES = [
+  { id: '1', text: "Hey! Saw you're also heading to Manali next month.", sender: 'them', time: '10:42 AM' },
+  { id: '2', text: "Hey Priya! Yes, planning to do the Rohtang Pass trek. Are you driving up from Chandigarh?", sender: 'me', time: '10:45 AM' },
+  { id: '3', text: "Exactly! I have space in my SUV if you want to split gas. We are a group of 2 right now.", sender: 'them', time: '10:47 AM' },
+  { id: '4', text: "That sounds perfect! Let's connect this weekend to plan the itinerary. 🏔️", sender: 'me', time: '10:50 AM' },
+];
+
+export default function ChatScreen({ navigation }: any) {
+  const insets = useSafeAreaInsets();
+  const [messages, setMessages] = useState(INITIAL_MESSAGES);
   const [inputText, setInputText] = useState('');
-  const [messages, setMessages] = useState<any[]>([]);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const flatListRef = useRef<FlatList>(null);
 
-  const receiverId = route.params?.receiverId || 'placeholder-id';
-  const receiverName = route.params?.receiverName || 'Travel Buddy';
-  const receiverAvatar = route.params?.receiverAvatar || 'https://i.pravatar.cc/150';
-
-  useEffect(() => {
-    setupChat();
-  }, []);
-
-  const setupChat = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    setCurrentUserId(user.id);
-
-    await fetchMessages(user.id);
-    subscribeToNewMessages(user.id);
-  };
-
-  const fetchMessages = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('messages')
-      .select('*')
-      .or(`and(sender_id.eq.${userId},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${userId})`)
-      .order('created_at', { ascending: true });
-
-    if (!error && data) {
-      setMessages(data);
-    }
-    setLoading(false);
-    setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: false }), 200);
-  };
-
-  const subscribeToNewMessages = (userId: string) => {
-    supabase
-      .channel('public:messages')
-      .on('postgres_changes', { 
-        event: 'INSERT', 
-        schema: 'public', 
-        table: 'messages',
-        filter: `receiver_id=eq.${userId}`
-      }, (payload) => {
-        if (payload.new.sender_id === receiverId) {
-          setMessages((current) => [...current, payload.new]);
-          setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
-        }
-      })
-      .subscribe();
-  };
-
-  const sendMessage = async () => {
-    if (inputText.trim() === '' || !currentUserId || receiverId === 'placeholder-id') return;
-
-    const messageText = inputText.trim();
-    setInputText(''); 
-
-    const tempMessage = {
-      id: Date.now().toString(),
-      sender_id: currentUserId,
-      receiver_id: receiverId,
-      text: messageText,
-      created_at: new Date().toISOString(),
-    };
+  const sendMessage = () => {
+    if (inputText.trim().length === 0) return;
     
-    setMessages((current) => [...current, tempMessage]);
-    setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
+    const newMessage = {
+      id: Date.now().toString(),
+      text: inputText,
+      sender: 'me',
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
 
-    const { error } = await supabase.from('messages').insert([
-      {
-        sender_id: currentUserId,
-        receiver_id: receiverId,
-        text: messageText
-      }
-    ]);
+    setMessages([...messages, newMessage]);
+    setInputText('');
+    
+    // Auto-scroll to bottom after sending
+    setTimeout(() => {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+  };
 
-    if (error) {
-      console.error('Error sending message:', error);
-    }
+  const renderMessage = ({ item }: { item: any }) => {
+    const isMe = item.sender === 'me';
+
+    return (
+      <View className={`mb-4 max-w-[80%] ${isMe ? 'self-end' : 'self-start'}`}>
+        <View 
+          className={`p-4 ${
+            isMe 
+              ? 'bg-[#30AF5B] rounded-[24px] rounded-tr-sm' // Green bubble with sharp top-right corner
+              : 'bg-white border border-gray-100 shadow-sm shadow-gray-100 rounded-[24px] rounded-tl-sm' // White bubble with sharp top-left corner
+          }`}
+        >
+          <Text className={`text-base font-medium leading-relaxed ${isMe ? 'text-white' : 'text-gray-800'}`}>
+            {item.text}
+          </Text>
+        </View>
+        <Text className={`text-[10px] font-bold text-gray-400 mt-1.5 ${isMe ? 'self-end mr-1' : 'self-start ml-1'}`}>
+          {item.time}
+        </Text>
+      </View>
+    );
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-200 shadow-sm z-10">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="p-2 -ml-2 mr-2">
-          <Ionicons name="arrow-back" size={24} color="#1F2937" />
-        </TouchableOpacity>
-        
-        <Image 
-          source={{ uri: receiverAvatar }} 
-          className="w-10 h-10 rounded-full border border-gray-200"
-        />
-        
-        <View className="ml-3 flex-1">
-          <Text className="text-lg font-bold text-gray-900">{receiverName}</Text>
-          <Text className="text-xs text-[#30AF5B] font-medium">Online</Text>
-        </View>
+    <View className="flex-1 bg-[#FAFAFA]">
+      <StatusBar barStyle="dark-content" />
+      
+      {/* 1. Sticky Header */}
+      <View 
+        style={{ paddingTop: insets.top }} 
+        className="bg-white/90 backdrop-blur-md border-b border-gray-100 z-10 shadow-sm shadow-gray-100/50"
+      >
+        <View className="px-4 py-3 flex-row items-center justify-between">
+          <View className="flex-row items-center">
+            {/* Back Button */}
+            <TouchableOpacity 
+              onPress={() => navigation.goBack()}
+              className="w-10 h-10 items-center justify-center mr-2"
+            >
+              <Ionicons name="chevron-back" size={28} color="#1F2937" />
+            </TouchableOpacity>
 
-        <TouchableOpacity className="p-2">
-          <Ionicons name="ellipsis-vertical" size={20} color="#6B7280" />
-        </TouchableOpacity>
+            {/* Buddy Info */}
+            <TouchableOpacity className="flex-row items-center">
+              <View className="relative">
+                <Image 
+                  source={{ uri: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop' }} 
+                  className="w-11 h-11 rounded-full bg-gray-200"
+                />
+                <View className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
+              </View>
+              <View className="ml-3">
+                <Text className="text-lg font-black text-gray-900 tracking-tight">Priya Patel</Text>
+                <Text className="text-xs font-bold text-[#30AF5B]">Online</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          {/* Action Icons */}
+          <View className="flex-row items-center gap-1">
+            <TouchableOpacity className="w-10 h-10 rounded-full items-center justify-center bg-gray-50">
+              <Ionicons name="call" size={20} color="#1F2937" />
+            </TouchableOpacity>
+            <TouchableOpacity className="w-10 h-10 rounded-full items-center justify-center bg-gray-50">
+              <Ionicons name="ellipsis-vertical" size={20} color="#1F2937" />
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
 
+      {/* 2. Chat Feed & Keyboard Handling */}
       <KeyboardAvoidingView 
-        style={{ flex: 1 }} 
-        behavior={Platform.OS === 'ios' ? 'padding' : "height"}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        className="flex-1"
       >
-        <ScrollView 
-          ref={scrollViewRef}
-          className="flex-1 px-4 pt-4"
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          keyExtractor={(item) => item.id}
+          renderItem={renderMessage}
           showsVerticalScrollIndicator={false}
-          onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
-        >
-          {loading ? (
-            <ActivityIndicator size="small" color="#30AF5B" className="mt-4" />
-          ) : messages.length === 0 ? (
-            <View className="items-center mt-10">
-              <Text className="text-gray-400 text-sm">Send a message to start syncing!</Text>
+          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 24, paddingBottom: 24 }}
+          // Center date pill
+          ListHeaderComponent={() => (
+            <View className="items-center mb-6">
+              <View className="bg-gray-200/50 px-3 py-1 rounded-full">
+                <Text className="text-xs font-bold text-gray-500">Today</Text>
+              </View>
             </View>
-          ) : (
-            messages.map((msg) => {
-              const isMe = msg.sender_id === currentUserId;
-              const date = new Date(msg.created_at);
-              const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-              return (
-                <View 
-                  key={msg.id} 
-                  className={`mb-4 max-w-[80%] ${isMe ? 'self-end' : 'self-start'}`}
-                >
-                  <View 
-                    className={`p-4 rounded-3xl ${
-                      isMe 
-                        ? 'bg-[#30AF5B] rounded-tr-sm' 
-                        : 'bg-white border border-gray-100 shadow-sm rounded-tl-sm'
-                    }`}
-                  >
-                    <Text className={`text-base ${isMe ? 'text-white' : 'text-gray-800'}`}>
-                      {msg.text}
-                    </Text>
-                  </View>
-                  <Text className={`text-[10px] text-gray-400 mt-1 ${isMe ? 'text-right mr-1' : 'ml-1'}`}>
-                    {timeString}
-                  </Text>
-                </View>
-              );
-            })
           )}
-          <View className="h-4" />
-        </ScrollView>
+        />
 
-        <View className="px-4 py-3 bg-white border-t border-gray-200 flex-row items-center pb-6">
-          <TouchableOpacity className="p-2 mr-1">
-            <FontAwesome name="plus" size={20} color="#9CA3AF" />
+        {/* 3. Input Area */}
+        <View 
+          style={{ paddingBottom: Math.max(insets.bottom, 16) }} 
+          className="bg-white border-t border-gray-100 px-4 pt-4 flex-row items-end"
+        >
+          {/* Attachment Button */}
+          <TouchableOpacity className="w-10 h-10 rounded-full items-center justify-center bg-gray-50 mb-1 mr-2">
+            <Feather name="plus" size={22} color="#6B7280" />
           </TouchableOpacity>
-          
-          <View className="flex-1 flex-row items-center bg-gray-100 rounded-full px-4 py-2 border border-gray-200">
+
+          {/* Text Input Pill */}
+          <View className="flex-1 bg-[#F8FAFC] border border-gray-100 rounded-[24px] px-4 py-2.5 min-h-[44px] max-h-[120px] justify-center flex-row items-end">
             <TextInput
-              className="flex-1 text-base text-gray-900 max-h-24 pt-2 pb-2"
+              value={inputText}
+              onChangeText={setInputText}
               placeholder="Type a message..."
               placeholderTextColor="#9CA3AF"
               multiline
-              value={inputText}
-              onChangeText={setInputText}
+              className="flex-1 text-base font-medium text-gray-900 pt-1 pb-1"
             />
           </View>
 
+          {/* Send Button */}
           <TouchableOpacity 
             onPress={sendMessage}
-            disabled={inputText.trim() === ''}
-            className={`ml-3 w-12 h-12 rounded-full items-center justify-center shadow-sm ${
-              inputText.trim() === '' ? 'bg-gray-200' : 'bg-[#30AF5B]'
+            disabled={inputText.trim().length === 0}
+            className={`w-11 h-11 rounded-full items-center justify-center mb-0.5 ml-2 transition-all ${
+              inputText.trim().length > 0 ? 'bg-[#30AF5B] shadow-sm shadow-green-900/20' : 'bg-gray-100'
             }`}
           >
             <Ionicons 
               name="send" 
               size={18} 
-              color={inputText.trim() === '' ? '#9CA3AF' : 'white'} 
-              style={{ marginLeft: 4 }} 
+              color={inputText.trim().length > 0 ? 'white' : '#9CA3AF'} 
+              style={{ marginLeft: 2 }} // Visually centers the send icon
             />
           </TouchableOpacity>
         </View>
+
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }

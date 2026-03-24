@@ -1,88 +1,106 @@
 import React, { useState } from 'react';
-import { View, Text, Modal, TouchableOpacity, ScrollView } from 'react-native';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { View, Text, TouchableOpacity, Modal, ScrollView, TextInput } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
-const FilterModal = ({ visible, onClose }: { visible: boolean; onClose: () => void }) => {
-  const categories = ['Solo', 'Group', 'Adventure', 'Luxury', 'Budget'];
-  const [activeCat, setActiveCat] = useState('Solo');
+
+export default function FilterModal({ visible, onClose }: { visible: boolean, onClose: () => void }) {
+  const [selectedVibe, setSelectedVibe] = useState('Any');
+  const [minBudget, setMinBudget] = useState('5000');
+  const [maxBudget, setMaxBudget] = useState('25000');
+
+  const vibes = ['Any', 'Adventure', 'Chill', 'Party', 'Nature', 'Roadtrip'];
 
   return (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={visible}
-      onRequestClose={onClose}
-    >
-      <View className="flex-1 justify-end bg-black/50">
-        <View className="bg-white rounded-t-[50px] p-8 pt-5 h-[70%] shadow-2xl">
+    <Modal visible={visible} animationType="slide" transparent={true}>
+      <View className="flex-1 justify-end bg-black/60">
+        <View className="bg-white rounded-t-[32px] p-6 h-[75%] shadow-2xl">
           
-          {/* Handlebar */}
-          <View className="w-12 h-1.5 bg-rs-bg rounded-full self-center mb-6" />
-
           <View className="flex-row justify-between items-center mb-8">
-            <Text className="text-2xl font-bold text-rs-dark">Filter Syncs</Text>
-            <TouchableOpacity onPress={onClose} className="bg-rs-bg p-2 rounded-full">
-              <Ionicons name="close" size={20} color="#30AF5B" />
+            <Text className="text-2xl font-black text-[#1F2937]">Filters</Text>
+            <TouchableOpacity onPress={onClose} className="bg-gray-100 p-2 rounded-full">
+              <Ionicons name="close" size={24} color="#1F2937" />
             </TouchableOpacity>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false}>
-            {/* Category Filter */}
-            <View className="mb-8">
-              <Text className="text-rs-dark font-bold text-lg mb-4">Travel Style</Text>
-              <View className="flex-row flex-wrap gap-3">
-                {categories.map((cat) => (
-                  <TouchableOpacity
-                    key={cat}
-                    onPress={() => setActiveCat(cat)}
-                    className={`px-6 py-3 rounded-2xl border ${
-                      activeCat === cat ? 'bg-rs-green border-rs-green' : 'bg-white border-rs-bg'
-                    }`}
-                  >
-                    <Text className={`font-bold text-sm ${activeCat === cat ? 'text-white' : 'text-rs-gray'}`}>
-                      {cat}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+          <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
+            
+            {/* Travel Vibe (Hilink Styled Pills) */}
+            <Text className="text-[#1F2937] font-extrabold text-base mb-4">Travel Vibe</Text>
+            <View className="flex-row flex-wrap gap-3 mb-8">
+              {vibes.map(vibe => (
+                <TouchableOpacity 
+                  key={vibe} 
+                  onPress={() => setSelectedVibe(vibe)}
+                  className={`px-5 py-2.5 rounded-full border ${selectedVibe === vibe ? 'bg-[#30AF5B] border-[#30AF5B]' : 'bg-[#FAFAFA] border-gray-200'}`}
+                >
+                  <Text className={`font-bold ${selectedVibe === vibe ? 'text-white' : 'text-[#1F2937]'}`}>{vibe}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Budget Range Slider & Inputs */}
+            <Text className="text-[#1F2937] font-extrabold text-base mb-4">Budget Range (₹)</Text>
+            
+            {/* Visual Custom Range Bar */}
+            <View className="mb-6 px-2">
+              <View className="h-2 bg-gray-100 rounded-full w-full relative">
+                {/* Active Green Track */}
+                <View className="absolute h-2 bg-[#30AF5B] rounded-full left-[20%] right-[30%]" />
+                {/* Thumb Handles */}
+                <View className="absolute w-6 h-6 bg-white border-2 border-[#30AF5B] rounded-full -top-2 left-[18%] shadow-sm" />
+                <View className="absolute w-6 h-6 bg-white border-2 border-[#30AF5B] rounded-full -top-2 right-[28%] shadow-sm" />
+              </View>
+              <View className="flex-row justify-between mt-3">
+                <Text className="text-xs font-bold text-gray-400">₹0</Text>
+                <Text className="text-xs font-bold text-gray-400">₹50k+</Text>
               </View>
             </View>
 
-            {/* Budget Range (Visual Placeholder for Slider) */}
-            <View className="mb-8">
-              <View className="flex-row justify-between items-center mb-4">
-                <Text className="text-rs-dark font-bold text-lg">Max Budget</Text>
-                <Text className="text-rs-green font-bold">₹15,000</Text>
+            {/* Exact Input Fields */}
+            <View className="flex-row items-center justify-between mb-8 space-x-4">
+              <View className="flex-1">
+                <Text className="text-xs font-bold text-gray-400 mb-2 ml-1">MIN</Text>
+                <View className="bg-[#FAFAFA] border border-gray-200 rounded-2xl p-4 flex-row items-center">
+                  <Text className="text-gray-500 font-bold mr-1">₹</Text>
+                  <TextInput 
+                    value={minBudget}
+                    onChangeText={setMinBudget}
+                    keyboardType="numeric"
+                    className="flex-1 font-bold text-[#1F2937] text-base"
+                  />
+                </View>
               </View>
-              <View className="h-2 w-full bg-rs-bg rounded-full relative">
-                <View className="absolute h-full w-[60%] bg-rs-green rounded-full" />
-                <View className="absolute h-6 w-6 bg-white border-4 border-rs-green rounded-full -top-2 left-[58%] shadow-sm" />
-              </View>
-            </View>
 
-            {/* Matching Precision */}
-            <View className="mb-10">
-              <Text className="text-rs-dark font-bold text-lg mb-4">Compatibility Score</Text>
-              <View className="flex-row items-center bg-rs-bg p-4 rounded-3xl">
-                <MaterialIcons name="bolt" size={24} color="#30AF5B" />
-                <Text className="ml-3 text-rs-gray font-medium flex-1">Show only 80%+ matches</Text>
-                <View className="w-10 h-6 bg-rs-green rounded-full items-end p-1">
-                   <View className="bg-white w-4 h-4 rounded-full" />
+              <View className="w-4 h-0.5 bg-gray-300 mt-6" /> {/* Dash between inputs */}
+
+              <View className="flex-1">
+                <Text className="text-xs font-bold text-gray-400 mb-2 ml-1">MAX</Text>
+                <View className="bg-[#FAFAFA] border border-gray-200 rounded-2xl p-4 flex-row items-center">
+                  <Text className="text-gray-500 font-bold mr-1">₹</Text>
+                  <TextInput 
+                    value={maxBudget}
+                    onChangeText={setMaxBudget}
+                    keyboardType="numeric"
+                    className="flex-1 font-bold text-[#1F2937] text-base"
+                  />
                 </View>
               </View>
             </View>
 
-            {/* Apply Button */}
+          </ScrollView>
+
+          {/* Apply Button */}
+          <View className="pt-4 border-t border-gray-100">
             <TouchableOpacity 
               onPress={onClose}
-              className="bg-rs-green py-5 rounded-3xl shadow-lg shadow-green-900/20"
+              className="bg-[#30AF5B] py-4 rounded-[20px] items-center shadow-lg shadow-green-900/20"
             >
-              <Text className="text-white text-center font-bold text-lg">Apply Filters</Text>
+              <Text className="text-white font-black text-lg tracking-wide">Show 12 Matches</Text>
             </TouchableOpacity>
-          </ScrollView>
+          </View>
+
         </View>
       </View>
     </Modal>
   );
-};
-
-export default FilterModal;
+}

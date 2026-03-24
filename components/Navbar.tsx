@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native'; 
 import { supabase } from '../lib/supabase';
 
 export default function Navbar() {
   const [profile, setProfile] = useState<any>(null);
+  const navigation = useNavigation<any>(); 
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -18,7 +20,7 @@ export default function Navbar() {
   }, []);
 
   // Safe fallbacks while loading
-  const displayName = profile?.first_name || profile?.full_name?.split(' ')[0] || 'Jaggu';
+  const displayName = profile?.first_name || profile?.full_name?.split(' ')[0] || 'Soft';
   const avatarUrl = profile?.avatar_url || 'https://i.pravatar.cc/150';
 
   return (
@@ -51,7 +53,11 @@ export default function Navbar() {
         </TouchableOpacity>
 
         {/* Notification Bell with Active Indicator */}
-        <TouchableOpacity className="bg-white w-12 h-12 rounded-full items-center justify-center border border-gray-100 shadow-sm shadow-gray-200 relative">
+        {/* Fixed Notification Routing */}
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('Notifications')}
+          className="bg-white w-12 h-12 rounded-full items-center justify-center border border-gray-100 shadow-sm shadow-gray-200 relative"
+        >
           <Ionicons name="notifications-outline" size={22} color="#1F2937" />
           <View className="absolute top-3 right-3 w-2.5 h-2.5 bg-[#30AF5B] rounded-full border-2 border-white" />
         </TouchableOpacity>
