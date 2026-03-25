@@ -38,8 +38,8 @@ export default function HeroButtons() {
               onPress={() => handlePress(tab)}
               className={`mr-3 flex-row items-center rounded-full border px-5 py-3.5 ${
                 isActive
-                  ? 'border-[#30AF5B] bg-[#30AF5B] shadow-md shadow-green-900/20'
-                  : 'border-gray-200 bg-white'
+                  ? 'border-emerald-700 bg-emerald-600 shadow-md shadow-green-900/20'
+                  : 'border-gray-200 bg-white/70'
               }`}>
               {/* The Icon MUST be rendered here */}
               <IconComponent

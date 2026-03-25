@@ -7,13 +7,16 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import RootNavigator from './navigation/RootNavigator';
 import AppNavigator from './navigation/MainStack';
+import { NavigationContainer } from '@react-navigation/native';
 
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-          <StatusBar style="dark" />
-          <RootNavigator />
+         <NavigationContainer>
+        <StatusBar style="dark" />
+        <AppNavigator />
+      </NavigationContainer>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

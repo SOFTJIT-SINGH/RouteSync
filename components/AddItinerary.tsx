@@ -7,7 +7,7 @@ export default function AddItinerary() {
   const navigation = useNavigation<any>(); // 2. Initialize it
 
   return (
-    <View className="bg-gray-900 rounded-[32px] p-6 relative overflow-hidden shadow-xl shadow-gray-900/20">
+    <View className="bg-emerald-800 rounded-[32px] p-6 relative overflow-hidden shadow-xl shadow-gray-900/20">
       {/* ... (Keep your existing background glow views) ... */}
       <View className="absolute -right-12 -top-12 bg-white/5 w-40 h-40 rounded-full blur-3xl" />
       <View className="absolute -right-4 -bottom-10 bg-[#30AF5B]/20 w-32 h-32 rounded-full blur-2xl" />
@@ -22,7 +22,7 @@ export default function AddItinerary() {
           </Text>
           <Text className="text-gray-400 text-sm font-medium mb-6 leading-relaxed pr-2">
             Draft your itinerary and find the perfect buddies to tag along.
-          </Text>
+          </Text> 
 
           <TouchableOpacity 
             activeOpacity={0.85}

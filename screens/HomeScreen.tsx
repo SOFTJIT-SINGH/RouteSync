@@ -1,112 +1,87 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StatusBar } from 'react-native';
+import React from 'react';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
 
-// Your Custom Components
+// COMPONENTS
 import Navbar from '../components/Navbar';
 import HeroButtons from '../components/HeroButtons';
 import ActiveSyncs from '../components/ActiveSyncs';
 import BuddyMatch from '../components/BuddyMatch';
 import AddItinerary from '../components/AddItinerary';
-import FilterModal from '../components/FilterModal';
 
 export default function HomeScreen({ navigation }: any) {
-  const [modalVisible, setModalVisible] = useState(false);
-
   return (
-    <SafeAreaView className="flex-1 bg-[#FAFAFA]" edges={['top']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FAFAFA" />
-      
-      {/* 1. Navbar - Pinned to top */}
-      <View className="px-6 py-4">
+    // Only ONE SafeAreaView per screen. flex-1 is critical here.
+    // <SafeAreaView className="flex-1 bg-[#FAFAFA]" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-rs-bg" edges={['top']}>
+      {/* Navbar sits pinned to the top */}
+      <View className="px-5 pb-4 pt-2">
         <Navbar />
       </View>
 
-      <ScrollView 
-        className="flex-1" 
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}
-      >
-       
-       {/*2. Main Title - Fixed Size */}
-        <View className="px-6 pt-2 pb-6">
-          <Text className="text-[40px] font-black text-gray-700 tracking-tighter leading-tight">
+      <ScrollView className="flex-1 px-5" showsVerticalScrollIndicator={false}>
+        {/* Main Title */}
+        <View className="my-8">
+          <Text className="text-2xl font-black leading-tight tracking-tighter text-gray-900">
             Route<Text className="text-[#30AF5B]">Sync</Text>.
           </Text>
-          <Text className="text-base text-gray-500 mt-1 font-medium leading-relaxed pr-8">
+          <Text className="mt-1 pr-8 font-medium leading-relaxed text-gray-500 text-sm">
             Find the perfect companion for your next adventure.
           </Text>
         </View>
 
-        {/* 3. Hero Actions */}
-        <View className="px-6 mb-10">
+        {/* Hero Actions */}
+        <View className="mb-5 mt-4">
           <HeroButtons />
         </View>
 
-        {/* 4. Active Syncs */}
-        <View className="mb-2">
-          {/* 4. Active Syncs */}
+        {/* Active Syncs */}
         <View className="mb-10">
-          <View className="px-6 flex-row justify-between items-center mb-4">
-            <Text className="text-xl font-bold text-gray-900 tracking-tight">Active Syncs</Text>
-            
-            {/* WIRE THIS UP TO GO TO MATCHES OR A SPECIFIC SYNCS PAGE */}
+          <View className="mb-4 flex-row items-center justify-between">
+            <Text className="text-xl font-bold tracking-tight text-gray-900">Active Syncs</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Matches')}>
-              <Text className="text-[#30AF5B] font-semibold text-sm">See all</Text>
+              <Text className="text-sm font-bold text-[#30AF5B]">See all</Text>
             </TouchableOpacity>
-            
           </View>
           <ActiveSyncs />
         </View>
-          
-          {/* Note: No px-6 wrapper here. ActiveSyncs needs to stretch to the edges 
-              so the internal horizontal ScrollView doesn't clip on the sides. */}
-          <ActiveSyncs />
-        </View>
 
-        {/* 5. Add Itinerary */}
-        <View className="px-6 mb-10">
+        {/* Add Itinerary */}
+        <View className="mb-10 rounded-[32px] shadow-sm shadow-gray-200">
           <AddItinerary />
         </View>
 
-        {/* 6. Buddy Matches */}
-        {/* 6. Buddy Matches */}
-        <View className="px-6 mb-4">
-          <View className="flex-row justify-between items-center mb-4">
+        {/* Buddy Matches */}
+        <View className="mb-6">
+          <View className="mb-4 flex-row items-center justify-between">
             <View>
-              <Text className="text-xl font-bold text-gray-900 tracking-tight">Find Matches</Text>
-              <Text className="text-sm text-gray-500 mt-0.5 font-medium">Travelers heading your way</Text>
+              <Text className="text-xl font-bold tracking-tight text-gray-900">Find Matches</Text>
+              <Text className="mt-0.5 text-sm font-medium text-gray-500">
+                Travelers heading your way
+              </Text>
             </View>
-            
-            {/* Filter Button */}
-            <TouchableOpacity 
-              onPress={() => setModalVisible(true)}
-              className="bg-white w-10 h-10 rounded-xl border border-gray-200 shadow-sm items-center justify-center"
-            >
-              <Feather name="sliders" size={18} color="#1F2937" />
-            </TouchableOpacity>
           </View>
-          
-          {/* The Match Card */}
-          <TouchableOpacity activeOpacity={0.95} onPress={() => navigation.navigate('Chat')}>
-            <BuddyMatch />
-          </TouchableOpacity>
 
-          {/* NEW: See All Matches Button */}
-          <TouchableOpacity 
-            activeOpacity={0.8}
-            className="mt-4 py-3.5 bg-green-50 rounded-[16px] border border-green-100 items-center flex-row justify-center"
-            onPress={() => navigation.navigate('Matches')}
-          >
-            <Text className="text-[#30AF5B] font-bold text-sm mr-1.5">See all matches</Text>
-            <Feather name="arrow-right" size={16} color="#30AF5B" />
+          <TouchableOpacity activeOpacity={0.9} onPress={() => navigation.navigate('Chat')}>
+            <BuddyMatch />
           </TouchableOpacity>
         </View>
 
+        {/* Your "Feeling Lost?" Card (Upgraded with Hilink Theme Colors) */}
+        <View className="relative mb-20 mt-5 overflow-hidden rounded-[32px] border border-green-400 bg-emerald-800 p-8 shadow-xl shadow-green-900/20">
+          <View className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/5 blur-3xl" />
+          <View className="absolute -bottom-10 -right-4 h-32 w-32 rounded-full bg-[#30AF5B]/20 blur-2xl" />
+          <Text className="text-2xl font-black tracking-tight text-white">Feeling Lost?</Text>
+          <Text className="mt-2 text-sm font-medium leading-6 text-white/90">
+            Our RouteSync engine matches you with travelers who know the way.
+          </Text>
+          <TouchableOpacity
+              className="mt-6 self-start rounded-2xl bg-rs-green backdrop-blur-2xl px-5 py-3.5 shadow-sm border-white/20 shadow-black/10"
+              onPress={() => navigation.navigate('Matches')}>
+              <Text className="text-base font-bold text-white">Get Started</Text>
+            </TouchableOpacity>
+        </View>
       </ScrollView>
-
-      <FilterModal visible={modalVisible} onClose={() => setModalVisible(false)} />
     </SafeAreaView>
   );
 }

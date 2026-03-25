@@ -70,7 +70,7 @@ const ActiveSyncs = () => {
   }
 
   return (
-    <View className="mx-5 mb-2">
+    <View className=" mb-2">
       <ScrollView 
         horizontal 
         showsHorizontalScrollIndicator={false} 
