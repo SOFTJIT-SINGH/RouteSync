@@ -114,7 +114,7 @@ export default function MatchesScreen({ navigation }: any) {
            <TouchableOpacity 
              activeOpacity={0.8}
              onPress={() => navigation.navigate('Chat')}
-             className="bg-[#30AF5B] px-6 py-2.5 rounded-[16px] shadow-sm shadow-green-200 flex-row items-center"
+             className="bg-[#30AF5B] py-2.5 rounded-[16px] shadow-sm px-1 shadow-green-200 flex-row items-center"
            >
              <Text className="text-white font-bold mr-2 text-sm">Message</Text>
              <Ionicons name="send" size={14} color="white" />
@@ -127,7 +127,10 @@ export default function MatchesScreen({ navigation }: any) {
   return (
     <SafeAreaView className="flex-1 bg-[#FAFAFA]" edges={['top']}>
       <StatusBar barStyle="dark-content" backgroundColor="#FAFAFA" />
-      {/* <Navbar /> */}
+     {/* UI FIX: Dropped the global Navbar here! */}
+      <View className="px-5 pt-2 pb-2 z-50">
+        {/* <Navbar /> */}
+      </View>
       {/* Header */}
       <View className="px-6 py-2 flex-row justify-between items-center">
         <TouchableOpacity 

@@ -33,26 +33,17 @@ const Drawer = createDrawerNavigator();
 function CustomDrawerContent(props: any) {
   const [profile, setProfile] = useState<any>(null);
 
-  // BUG FIX 2: Dynamic Data Refresh
-  // Using useFocusEffect ensures the profile data is re-fetched every time the Drawer is opened,
-  // not just once when the app loads.
+  // BUG FIX: Dynamic Refresh - fetches fresh data every time the drawer opens
   useFocusEffect(
     useCallback(() => {
       let isActive = true;
-
       const fetchUser = async () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (user && isActive) {
-          const { data } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .maybeSingle();
-          
+          const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
           if (data && (data.full_name || data.first_name)) {
             setProfile(data);
           } else {
-            // Dynamic Fallback
             const emailName = user.email ? user.email.split('@')[0] : 'Explorer';
             setProfile({
               full_name: 'Traveler',
@@ -62,12 +53,8 @@ function CustomDrawerContent(props: any) {
           }
         }
       };
-
       fetchUser();
-
-      return () => {
-        isActive = false;
-      };
+      return () => { isActive = false; };
     }, [])
   );
 
@@ -76,19 +63,19 @@ function CustomDrawerContent(props: any) {
   const avatarUrl = profile?.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150&auto=format&fit=crop';
 
   return (
-    <SafeAreaView className="flex-1 bg-[#059669] rounded-r-[40px] overflow-hidden border-r border-[#10b981] shadow-2xl">
+   <SafeAreaView className="flex-1 bg-emerald-600 rounded-r-[40px] overflow-hidden border-r border-emerald-500 shadow-2xl">
       <DrawerContentScrollView {...props} contentContainerStyle={{ paddingTop: 0 }}>
         
-        <View className="px-6 pt-20 pb-8 bg-[#047857] rounded-br-[60px] mb-6 border-b border-[#059669] relative">
+        <View className="px-6 pt-20 pb-8 bg-emerald-700 rounded-br-[60px] mb-6 border-b border-emerald-500 relative">
           <TouchableOpacity 
             onPress={() => props.navigation.closeDrawer()} 
-            className="absolute top-14 right-6 w-10 h-10 bg-[#059669] rounded-full items-center justify-center border border-[#10b981]"
+            className="absolute top-14 right-6 w-10 h-10 bg-emerald-600 rounded-full items-center justify-center border border-emerald-400"
           >
             <Feather name="x" size={20} color="#a7f3d0" />
           </TouchableOpacity>
           <Image 
             source={{ uri: avatarUrl }} 
-            className="w-20 h-20 rounded-full border-4 border-white mb-4 bg-[#064e3b]"
+            className="w-20 h-20 rounded-full border-4 border-white mb-4 bg-emerald-800"
           />
           <Text className="text-2xl font-black text-white tracking-tight">{displayName}</Text>
           <Text className="text-emerald-100 font-bold text-sm mt-0.5">@{username}</Text>
@@ -97,12 +84,11 @@ function CustomDrawerContent(props: any) {
         <View className="flex-1 px-3">
           <DrawerItemList {...props} />
         </View>
-
       </DrawerContentScrollView>
       
-      <View className="p-8 border-t border-[#10b981] mb-4">
+      <View className="p-8 border-t border-emerald-500 mb-4">
         <TouchableOpacity 
-          className="flex-row items-center bg-[#047857] p-4 rounded-2xl border border-[#059669] shadow-sm"
+          className="flex-row items-center bg-emerald-700 p-4 rounded-2xl border border-emerald-500 shadow-sm"
           onPress={async () => await supabase.auth.signOut()}
         >
           <Feather name="log-out" size={20} color="#fda4af" />
@@ -115,7 +101,7 @@ function CustomDrawerContent(props: any) {
 
 function TabNavigator() {
   return (
-    <Tab.Navigator
+   <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarShowLabel: false,
@@ -133,7 +119,7 @@ function TabNavigator() {
           shadowRadius: 10,
         },
         tabBarItemStyle: {
-          flex: 1, 
+          flex: 1, // Fixes uneven distribution
           justifyContent: 'center',
           alignItems: 'center',
           height: Platform.OS === 'ios' ? 65 : 70,
@@ -142,8 +128,7 @@ function TabNavigator() {
           let iconName: any;
           if (route.name === 'Home') iconName = focused ? 'compass' : 'compass-outline';
           else if (route.name === 'Matches') iconName = focused ? 'people' : 'people-outline';
-          else if (route.name === 'Community')
-            iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
+          else if (route.name === 'Community') iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
           else if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
 
           return (
@@ -195,41 +180,18 @@ export default function AppNavigator() {
       screenOptions={{
         headerShown: false,
         drawerType: 'front',
-        // BUG FIX 1: Replaced the broken rgb string with a transparent background. 
-        // The real background color is now applied safely to the SafeAreaView inside the Drawer Component.
         drawerStyle: {
-          backgroundColor: 'rgb(4 120 87)',
-          width: 290,
+          backgroundColor: 'rgba(4, 120, 87, 1)', // BUG FIX: Allows the rounded corners to show!
+          width: 300,
         },
         drawerActiveBackgroundColor: 'rgba(255, 255, 255, 0.15)',
         drawerActiveTintColor: '#ffffff',
         drawerInactiveTintColor: '#d1fae5', 
         drawerLabelStyle: { fontWeight: 'bold', fontSize: 16, marginLeft: -10 },
       }}>
-      <Drawer.Screen
-        name="MainApp"
-        component={MainStack}
-        options={{
-          title: 'Dashboard',
-          drawerIcon: ({ color }) => <Feather name="grid" size={22} color={color} />,
-        }}
-      />
-      <Drawer.Screen
-        name="SavedTrips"
-        component={ProfileScreen}
-        options={{
-          title: 'Saved Itineraries',
-          drawerIcon: ({ color }) => <Feather name="bookmark" size={22} color={color} />,
-        }}
-      />
-      <Drawer.Screen
-        name="Settings"
-        component={ProfileScreen}
-        options={{
-          title: 'Settings',
-          drawerIcon: ({ color }) => <Feather name="settings" size={22} color={color} />,
-        }}
-      />
+      <Drawer.Screen name="MainApp" component={MainStack} options={{ title: 'Dashboard', drawerIcon: ({ color }) => <Feather name="grid" size={22} color={color} /> }} />
+      <Drawer.Screen name="SavedTrips" component={ProfileScreen} options={{ title: 'Saved Itineraries', drawerIcon: ({ color }) => <Feather name="bookmark" size={22} color={color} /> }} />
+      <Drawer.Screen name="Settings" component={ProfileScreen} options={{ title: 'Settings', drawerIcon: ({ color }) => <Feather name="settings" size={22} color={color} /> }} />
     </Drawer.Navigator>
   );
 }
