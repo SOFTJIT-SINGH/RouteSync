@@ -37,9 +37,7 @@ export default function AddItinerary() {
         <View className="justify-center items-center mr-2">
            <View className="w-20 h-20 bg-white/5 rounded-full items-center justify-center border border-white/10 backdrop-blur-md relative">
              <FontAwesome6 name="map-location-dot" size={32} color="#30AF5B" />
-             <View className="absolute -bottom-2 -right-2 bg-gray-800 p-2 rounded-full border-2 border-gray-900">
-               <Ionicons name="compass" size={18} color="white" />
-             </View>
+             
            </View>
         </View>
       </View>

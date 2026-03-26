@@ -118,7 +118,10 @@ export default function ProfileScreen({ navigation }: any) {
               className="w-24 h-24 rounded-full border-4 border-[#FAFAFA] bg-gray-200"
             />
             {/* Edit Profile Button */}
-            <TouchableOpacity className="bg-gray-900 px-5 py-2.5 rounded-full mb-2 shadow-sm shadow-gray-900/30">
+            <TouchableOpacity 
+              onPress={() => navigation.navigate('EditProfile')} // <-- ADD THIS LINE!
+              className="bg-gray-900 px-5 py-2.5 rounded-full mb-2 shadow-sm shadow-gray-900/30"
+            >
               <Text className="text-white font-bold text-sm">Edit Profile</Text>
             </TouchableOpacity>
           </View>

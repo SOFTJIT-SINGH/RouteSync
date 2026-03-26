@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, FlatList, Image, ActivityIndicator, Statu
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
+import Navbar from '../components/Navbar';
 
 export default function MatchesScreen({ navigation }: any) {
   const [matches, setMatches] = useState<any[]>([]);
@@ -126,7 +127,7 @@ export default function MatchesScreen({ navigation }: any) {
   return (
     <SafeAreaView className="flex-1 bg-[#FAFAFA]" edges={['top']}>
       <StatusBar barStyle="dark-content" backgroundColor="#FAFAFA" />
-      
+      {/* <Navbar /> */}
       {/* Header */}
       <View className="px-6 py-2 flex-row justify-between items-center">
         <TouchableOpacity 

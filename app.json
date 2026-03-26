@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "routesync",
-    "slug": "routesync",
+    "name": "RouteSync",
+    "slug": "RouteSync",
     "version": "1.0.0",
     "web": {
       "favicon": "./assets/logo.png"

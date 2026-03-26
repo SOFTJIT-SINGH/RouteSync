@@ -23,7 +23,7 @@ export default function HomeScreen({ navigation }: any) {
         {/* Main Title */}
         <View className="my-8">
           <Text className="text-2xl font-black leading-tight tracking-tighter text-gray-900">
-            Route<Text className="text-[#30AF5B]">Sync</Text>.
+            Route<Text className="text-[#30AF5B]">Sync</Text>
           </Text>
           <Text className="mt-1 pr-8 font-medium leading-relaxed text-gray-500 text-sm">
             Find the perfect companion for your next adventure.

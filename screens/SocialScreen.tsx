@@ -1,86 +1,145 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, FlatList, Image, TouchableOpacity, ActivityIndicator, RefreshControl, Platform } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, FlatList, Image, TouchableOpacity, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, FontAwesome } from '@expo/vector-icons';
-import { supabase } from '../lib/supabase';
+import { Ionicons, Feather, FontAwesome6 } from '@expo/vector-icons';
 
-const timeAgo = (dateString: string) => {
-  const date = new Date(dateString);
-  const now = new Date();
-  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  let interval = seconds / 31536000; if (interval > 1) return Math.floor(interval) + 'y';
-  interval = seconds / 2592000; if (interval > 1) return Math.floor(interval) + 'mo';
-  interval = seconds / 86400; if (interval > 1) return Math.floor(interval) + 'd';
-  interval = seconds / 3600; if (interval > 1) return Math.floor(interval) + 'h';
-  interval = seconds / 60; if (interval > 1) return Math.floor(interval) + 'm';
-  return 'Just now';
-};
+// High-Quality Mock Data for the Feed
+const FEED_POSTS = [
+  {
+    id: '1',
+    user: { name: 'Aisha Sharma', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop' },
+    location: 'Spiti Valley, Himachal',
+    image: 'https://images.unsplash.com/photo-1605649487212-4dcb3b654abf?q=80&w=1000&auto=format&fit=crop',
+    caption: 'Finally made it to the middle of nowhere. The roads were rough, but the view from Key Monastery is worth every bump. 🏔️✨',
+    likes: 342,
+    comments: 28,
+    time: '2 hours ago',
+    isLiked: true,
+  },
+  {
+    id: '2',
+    user: { name: 'Rohan Gupta', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&auto=format&fit=crop' },
+    location: 'Varkala Cliff, Kerala',
+    image: 'https://images.unsplash.com/photo-1593693397690-362cb9666c89?q=80&w=1000&auto=format&fit=crop',
+    caption: 'Chasing sunsets and surfing waves. If anyone is around south cliff tonight, let’s grab seafood! 🌊🏄‍♂️',
+    likes: 128,
+    comments: 15,
+    time: '5 hours ago',
+    isLiked: false,
+  },
+];
 
-export default function SocialScreen({ navigation }: any) {
-  const [posts, setPosts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [likedPosts, setLikedPosts] = useState<{ [key: string]: boolean }>({});
+export default function SocialScreen() {
+  const [posts, setPosts] = useState(FEED_POSTS);
 
-  const fetchPosts = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('posts')
-        .select('id, content, image_url, created_at, profiles(id, full_name, avatar_url)')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      setPosts(data || []);
-    } catch (error: any) {
-      console.error(error.message);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
+  const toggleLike = (postId: string) => {
+    setPosts(posts.map(post => {
+      if (post.id === postId) {
+        return { 
+          ...post, 
+          isLiked: !post.isLiked, 
+          likes: post.isLiked ? post.likes - 1 : post.likes + 1 
+        };
+      }
+      return post;
+    }));
   };
 
-  useEffect(() => { fetchPosts(); }, []);
-  const onRefresh = useCallback(() => { setRefreshing(true); fetchPosts(); }, []);
-
   const renderPost = ({ item }: { item: any }) => (
-    <View className="bg-white mb-6 border-b border-gray-100 pb-6 px-5">
+    <View className="mb-8 px-5">
+      {/* 1. Post Header (User & Location) */}
       <View className="flex-row items-center justify-between mb-3">
         <View className="flex-row items-center">
-          <Image source={{ uri: item.profiles?.avatar_url || 'https://i.pravatar.cc/150' }} className="w-11 h-11 rounded-full bg-gray-200" />
+          <Image source={{ uri: item.user.avatar }} className="w-10 h-10 rounded-full bg-gray-200" />
           <View className="ml-3">
-            <Text className="text-base font-bold text-gray-900">{item.profiles?.full_name || 'Traveler'}</Text>
-            <Text className="text-xs text-gray-400 font-medium">{timeAgo(item.created_at)}</Text>
+            <Text className="text-base font-bold text-gray-900 leading-tight">{item.user.name}</Text>
+            <View className="flex-row items-center mt-0.5">
+              <FontAwesome6 name="location-dot" size={10} color="#30AF5B" />
+              <Text className="text-xs font-semibold text-gray-500 ml-1">{item.location}</Text>
+            </View>
           </View>
         </View>
-      </View>
-      <Text className="text-gray-800 text-base leading-relaxed mb-3 font-medium">{item.content}</Text>
-      {item.image_url && <Image source={{ uri: item.image_url }} className="w-full h-64 rounded-3xl bg-gray-100 mb-4" />}
-      <View className="flex-row items-center space-x-6 mt-1">
-        <TouchableOpacity onPress={() => setLikedPosts(p => ({ ...p, [item.id]: !p[item.id] }))} className="flex-row items-center">
-          <Ionicons name={likedPosts[item.id] ? "heart" : "heart-outline"} size={26} color={likedPosts[item.id] ? "#EF4444" : "#4B5563"} />
-          <Text className={`ml-1.5 font-bold ${likedPosts[item.id] ? 'text-red-500' : 'text-gray-600'}`}>{likedPosts[item.id] ? '1' : '0'}</Text>
+        <TouchableOpacity className="w-8 h-8 items-center justify-center">
+          <Feather name="more-horizontal" size={20} color="#9CA3AF" />
         </TouchableOpacity>
+      </View>
+
+      {/* 2. The Image with Glassmorphism Overlay */}
+      <View className="relative w-full h-[350px] rounded-[32px] overflow-hidden bg-gray-100 shadow-sm shadow-gray-200">
+        <Image source={{ uri: item.image }} className="w-full h-full" resizeMode="cover" />
+        
+        {/* Floating "Travel Buddy Needed" Tag (Example of premium UI detail) */}
+        {item.id === '1' && (
+          <View className="absolute top-4 right-4 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 flex-row items-center">
+            <View className="w-2 h-2 bg-[#30AF5B] rounded-full mr-2" />
+            <Text className="text-white text-xs font-bold tracking-wide">Looking for buddies</Text>
+          </View>
+        )}
+      </View>
+
+      {/* 3. Interaction Bar */}
+      <View className="flex-row items-center justify-between mt-4 px-1">
+        <View className="flex-row items-center space-x-4">
+          <TouchableOpacity 
+            onPress={() => toggleLike(item.id)}
+            className="flex-row items-center"
+          >
+            <Ionicons 
+              name={item.isLiked ? "heart" : "heart-outline"} 
+              size={26} 
+              color={item.isLiked ? "#EF4444" : "#1F2937"} 
+            />
+            <Text className={`ml-1.5 font-bold ${item.isLiked ? 'text-[#EF4444]' : 'text-gray-700'}`}>
+              {item.likes}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity className="flex-row items-center ml-4">
+            <Ionicons name="chatbubble-outline" size={24} color="#1F2937" />
+            <Text className="ml-1.5 font-bold text-gray-700">{item.comments}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity className="flex-row items-center ml-4">
+            <Feather name="send" size={22} color="#1F2937" />
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity>
+          <Feather name="bookmark" size={24} color="#1F2937" />
+        </TouchableOpacity>
+      </View>
+
+      {/* 4. Caption */}
+      <View className="mt-3 px-1">
+        <Text className="text-sm text-gray-800 leading-relaxed font-medium">
+          <Text className="font-bold text-gray-900 mr-2">{item.user.name} </Text>
+          {item.caption}
+        </Text>
+        <Text className="text-xs text-gray-400 font-semibold mt-1.5">{item.time}</Text>
       </View>
     </View>
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <View className="px-5 py-4 flex-row items-center border-b border-gray-50">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
-          <Ionicons name="arrow-back" size={26} color="#1F2937" />
+    <SafeAreaView className="flex-1 bg-[#FAFAFA]" edges={['top']}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FAFAFA" />
+      
+      {/* Header */}
+      <View className="px-5 py-3 flex-row justify-between items-center bg-[#FAFAFA] z-10">
+        <Text className="text-2xl font-black text-gray-900 tracking-tight">Community</Text>
+        <TouchableOpacity className="w-10 h-10 bg-white rounded-full items-center justify-center border border-gray-200 shadow-sm shadow-gray-100">
+          <Feather name="plus" size={20} color="#1F2937" />
         </TouchableOpacity>
-        <Text className="text-xl font-black text-gray-900 tracking-tight">Community Feed</Text>
       </View>
-      {loading ? (
-        <View className="flex-1 justify-center items-center"><ActivityIndicator size="large" color="#30AF5B" /></View>
-      ) : (
-        <FlatList
-          data={posts}
-          renderItem={renderPost}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#30AF5B" />}
-          contentContainerStyle={{ paddingTop: 16 }}
-        />
-      )}
+
+      {/* Feed */}
+      <FlatList
+        data={posts}
+        keyExtractor={(item) => item.id}
+        renderItem={renderPost}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingTop: 10, paddingBottom: 40 }}
+      />
     </SafeAreaView>
   );
 }
