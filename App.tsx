@@ -8,15 +8,17 @@ import { StatusBar } from 'expo-status-bar';
 // import RootNavigator from './navigation/RootNavigator';
 import AppNavigator from './navigation/MainStack';
 import { NavigationContainer } from '@react-navigation/native';
+import RootNavigator from 'navigation/RootNavigator';
 
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-         <NavigationContainer>
+         {/* <NavigationContainer> */}
         <StatusBar style="dark" />
-        <AppNavigator />
-      </NavigationContainer>
+        {/* <AppNavigator /> */}
+        <RootNavigator />
+      {/* </NavigationContainer> */}
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
