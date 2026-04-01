@@ -40,7 +40,6 @@ export default function MatchesScreen({ navigation }: any) {
           profiles:user_id (
             full_name,
             first_name,
-            username,
             avatar_url
           )
         `)

@@ -1,6 +1,11 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ['./App.{js,ts,tsx}', './components/**/*.{js,ts,tsx}', './screens/**/*.{js,ts,tsx}'],
+  content: [
+    './App.{js,ts,tsx}', 
+    './components/**/*.{js,ts,tsx}',
+    './screens/**/*.{js,ts,tsx}',
+    './navigation/**/*.{js,ts,tsx}',
+  ],
   presets: [require('nativewind/preset')],
   theme: {
     extend: {
@@ -13,7 +18,6 @@ module.exports = {
       borderRadius: {
         '5xl': '40px',
       },
-      // Add blur intensity variants if needed
       backdropBlur: {
         xs: 2,
         sm: 4,
