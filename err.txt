@@ -1,0 +1,17 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm.
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+
+Rebuilding...
+TypeError: value.trim is not a function
+    at backdrop-blur (D:\Projects\travelbuddy\routesync\node_modules\tailwindcss\lib\corePlugins.js:4072:49)
+    at wrapped (D:\Projects\travelbuddy\routesync\node_modules\tailwindcss\lib\lib\setupContextUtils.js:474:65)
+    at resolveMatches (D:\Projects\travelbuddy\routesync\node_modules\tailwindcss\lib\lib\generateRules.js:626:47)
+    at resolveMatches.next (<anonymous>)
+    at Function.from (<anonymous>)
+    at generateRules (D:\Projects\travelbuddy\routesync\node_modules\tailwindcss\lib\lib\generateRules.js:877:29)
+    at D:\Projects\travelbuddy\routesync\node_modules\tailwindcss\lib\lib\expandTailwindAtRules.js:191:42
+    at async D:\Projects\travelbuddy\routesync\node_modules\tailwindcss\lib\processTailwindFeatures.js:51:9
+    at async Object.Once (D:\Projects\travelbuddy\routesync\node_modules\tailwindcss\lib\cli\build\plugin.js:248:17)
+    at async LazyResult.runAsync (D:\Projects\travelbuddy\routesync\node_modules\postcss\lib\lazy-result.js:293:11)
