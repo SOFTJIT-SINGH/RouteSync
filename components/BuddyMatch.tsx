@@ -16,10 +16,8 @@ export default function BuddyMatch() {
 
   const fetchBuddyMatch = async () => {
     try {
-      // 1. Get the current logged-in user
       const { data: { user } } = await supabase.auth.getUser();
 
-      // 2. Fetch a random profile that IS NOT the current user
       let profileQuery = supabase.from('profiles').select('*');
       if (user) {
         profileQuery = profileQuery.neq('id', user.id);
@@ -30,7 +28,6 @@ export default function BuddyMatch() {
       if (profileData) {
         setMatch(profileData);
 
-        // 3. See if this buddy has any upcoming trips planned
         const { data: tripData } = await supabase
           .from('trips')
           .select('destination, start_date')
@@ -53,24 +50,23 @@ export default function BuddyMatch() {
   // Loading State
   if (loading) {
     return (
-      <View className="bg-white rounded-[32px] p-10 border border-gray-100 shadow-sm items-center justify-center">
+      <View className="p-10 items-center justify-center">
         <ActivityIndicator size="small" color="#30AF5B" />
-        <Text className="text-gray-400 mt-3 font-medium text-sm">Finding your perfect match...</Text>
+        <Text className="text-hi-gray-30 mt-3 font-semibold text-sm">Finding your perfect match...</Text>
       </View>
     );
   }
 
-  // Fallback if database is empty or no other users exist
+  // Fallback
   if (!match) {
     return (
-      <View className="bg-white rounded-[32px] p-8 border border-gray-100 shadow-sm items-center justify-center">
-        <Ionicons name="search" size={32} color="#D1D5DB" />
-        <Text className="text-gray-500 font-medium text-center mt-3">No new buddies in your area right now.</Text>
+      <View className="p-8 items-center justify-center">
+        <Ionicons name="search" size={32} color="#A2A2A2" />
+        <Text className="text-hi-gray-30 font-bold text-center mt-3">No new buddies in your area right now.</Text>
       </View>
     );
   }
 
-  // Dynamic formatting with safe fallbacks
   const displayName = match.full_name || match.first_name || 'Traveler';
   const avatarUrl = match.avatar_url || 'https://i.pravatar.cc/150';
   const displayDestination = trip?.destination || 'Anywhere';
@@ -80,69 +76,67 @@ export default function BuddyMatch() {
     : 'Dates Flexible';
 
   return (
-    <View className="bg-white rounded-[32px] p-5 border border-gray-100 shadow-sm shadow-gray-200">
-      
+    <View className="p-5">
       {/* 1. Profile Header Row */}
       <View className="flex-row items-center">
         <View className="relative">
           <Image 
             source={{ uri: avatarUrl }} 
-            className="w-16 h-16 rounded-full bg-gray-200"
+            className="w-16 h-16 rounded-full border-2 border-hi-gray-10 bg-hi-gray-10"
           />
-          <View className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white" />
+          <View className="absolute bottom-0 right-0 w-4 h-4 bg-hi-green rounded-full border-2 border-white" />
         </View>
 
         <View className="ml-4 flex-1">
           <View className="flex-row items-center justify-between">
-            <Text className="text-lg font-extrabold text-gray-900 tracking-tight" numberOfLines={1}>
+            <Text className="text-xl font-black text-hi-dark tracking-tight" numberOfLines={1}>
               {displayName}
             </Text>
             
-            <View className="bg-green-50 px-2.5 py-1 rounded-lg border border-green-100 flex-row items-center">
+            <View className="bg-hi-green/10 px-3 py-1.5 rounded-full flex-row items-center">
               <Ionicons name="flame" size={12} color="#30AF5B" />
-              <Text className="text-xs font-extrabold text-[#30AF5B] ml-1">94% Match</Text>
+              <Text className="text-xs font-black text-hi-green ml-1">94% Match</Text>
             </View>
           </View>
           
-          <Text className="text-sm font-medium text-gray-500 mt-0.5" numberOfLines={1}>
-            Heading to <Text className="text-gray-900 font-bold">{displayDestination}</Text> • {displayDate}
+          <Text className="text-sm font-medium text-hi-gray-30 mt-1" numberOfLines={1}>
+            Heading to <Text className="font-black text-hi-dark">{displayDestination}</Text> • {displayDate}
           </Text>
         </View>
       </View>
 
-      {/* 2. Shared Interests (Using fallback mock data if bio/interests are empty) */}
-      <View className="flex-row flex-wrap mt-5 gap-2">
-        <View className="bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100">
-          <Text className="text-xs font-semibold text-gray-600">📸 Photography</Text>
+      {/* 2. Shared Interests */}
+      <View className="flex-row flex-wrap mt-4 gap-2">
+        <View className="bg-hi-bg px-3 py-1.5 rounded-full border border-hi-gray-10">
+          <Text className="text-xs font-bold text-hi-gray-50">📸 Photography</Text>
         </View>
-        <View className="bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100">
-          <Text className="text-xs font-semibold text-gray-600">🍕 Foodie</Text>
+        <View className="bg-hi-bg px-3 py-1.5 rounded-full border border-hi-gray-10">
+          <Text className="text-xs font-bold text-hi-gray-50">🍕 Foodie</Text>
         </View>
-        <View className="bg-gray-50 px-3 py-1.5 rounded-xl border border-gray-100">
-          <Text className="text-xs font-semibold text-gray-600">🏕️ Camping</Text>
+        <View className="bg-hi-bg px-3 py-1.5 rounded-full border border-hi-gray-10">
+          <Text className="text-xs font-bold text-hi-gray-50">🏕️ Camping</Text>
         </View>
       </View>
 
       {/* 3. Action Bar */}
-      <View className="mt-5 flex-row items-center justify-between bg-gray-50 p-1.5 rounded-[20px] border border-gray-100">
-         <View className="flex-row items-center ml-3">
+      <View className="mt-5 flex-row items-center justify-between bg-hi-bg p-2.5 rounded-full border border-hi-gray-10">
+         <View className="flex-row items-center ml-2">
            <View className="flex-row -space-x-2 mr-2">
               <Image source={{ uri: 'https://i.pravatar.cc/100?img=33' }} className="w-7 h-7 rounded-full border-2 border-white" />
               <Image source={{ uri: 'https://i.pravatar.cc/100?img=44' }} className="w-7 h-7 rounded-full border-2 border-white" />
            </View>
-           <Text className="text-xs font-bold text-gray-500">2 mutuals</Text>
+           <Text className="text-xs font-bold text-hi-gray-30">2 mutuals</Text>
          </View>
          
          <TouchableOpacity 
            activeOpacity={0.8}
-           onPress={() => navigation.navigate('Chat')} // Tell it to go to Chat!
-           className="bg-[#30AF5B] px-5 py-2.5 rounded-[16px] shadow-sm shadow-green-200 flex-row items-center"
+           onPress={() => navigation.navigate('Chat')}
+           className="bg-hi-dark px-5 py-3 rounded-full flex-row items-center"
          >
-           <Text className="text-white font-bold mr-2 text-sm">Say Hi</Text>
+           <Text className="text-white font-black mr-2 text-sm">Say Hi</Text>
            <Ionicons name="send" size={14} color="white" />
          </TouchableOpacity>
       </View>
-
     </View>
   );
 }

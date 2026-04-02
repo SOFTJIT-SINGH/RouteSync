@@ -1,10 +1,9 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ImageBackground } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 
-// COMPONENTS (adjust imports to your actual paths)
+// COMPONENTS
 import Navbar from '../components/Navbar';
 import HeroButtons from '../components/HeroButtons';
 import ActiveSyncs from '../components/ActiveSyncs';
@@ -13,116 +12,105 @@ import AddItinerary from '../components/AddItinerary';
 
 export default function HomeScreen({ navigation }: any) {
   return (
-    <SafeAreaView className="flex-1 bg-rs-bg" edges={['top']}>
-      {/* Subtle gradient overlay for depth */}
-      <LinearGradient
-        colors={['rgba(48,175,91,0.05)', 'transparent']}
-        className="absolute top-0 left-0 right-0 h-64"
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-      />
-
+    <SafeAreaView className="flex-1 bg-hi-bg" edges={['top']}>
       {/* Navbar */}
-      <View className="px-5 pb-4 pt-2 z-10">
+      <View className="px-5 pt-2 pb-3 bg-hi-bg">
         <Navbar />
       </View>
 
-      <ScrollView 
-        className="flex-1 px-5" 
+      <ScrollView
+        className="flex-1 px-5"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 40 }}
       >
-        {/* Hero Section with Glass Card */}
-        <BlurView intensity={15} tint="light" className="rounded-3xl overflow-hidden mt-2 mb-6">
-          <View className="p-6 border border-white/20 bg-white/30">
-            <Text className="text-3xl font-black tracking-tighter text-rs-dark">
-              Route<Text className="text-rs-green">Sync</Text>
-            </Text>
-            <Text className="mt-2 text-base font-medium text-rs-gray leading-6">
-              Find the perfect companion for your next adventure.
-            </Text>
+        {/* Welcome Card */}
+        <View className="mt-4 mb-6 bg-white rounded-3xl p-5 shadow-sm shadow-gray-200 border border-hi-gray-10">
+          <View className="flex-row items-center justify-between">
+            <View className="flex-1">
+              <Text className="text-2xl font-black tracking-tight text-hi-dark">
+                Hello, Traveler! 👋
+              </Text>
+              <Text className="mt-1 text-sm font-medium text-hi-gray-30">
+                Ready to explore new places?
+              </Text>
+            </View>
+            <View className="w-12 h-12 bg-hi-green/10 rounded-full items-center justify-center">
+              <Ionicons name="airplane" size={24} color="#30AF5B" />
+            </View>
           </View>
-        </BlurView>
+        </View>
 
-        {/* Hero Actions (buttons) */}
+        {/* Quick Actions – HeroButtons */}
         <View className="mb-8">
           <HeroButtons />
         </View>
 
-        {/* Active Syncs - Glass Card Style */}
+        {/* Active Syncs – Section */}
         <View className="mb-10">
-          <View className="flex-row items-center justify-between mb-4 px-1">
-            <Text className="text-xl font-bold tracking-tight text-rs-dark">Active Syncs</Text>
+          <View className="flex-row items-center justify-between mb-4">
+            <View className="flex-row items-center space-x-2">
+              <Ionicons name="flash" size={20} color="#30AF5B" />
+              <Text className="text-lg font-bold tracking-tight text-hi-dark">
+                Active Syncs
+              </Text>
+            </View>
             <TouchableOpacity onPress={() => navigation.navigate('Matches')}>
-              <Text className="text-sm font-bold text-rs-green">See all →</Text>
+              <Text className="text-sm font-bold text-hi-green">See all →</Text>
             </TouchableOpacity>
           </View>
-          <BlurView intensity={20} tint="light" className="rounded-2xl overflow-hidden">
-            <View className="bg-white/30 p-1 border border-white/40">
-              <ActiveSyncs />
-            </View>
-          </BlurView>
+          <ActiveSyncs />
         </View>
 
-        {/* Add Itinerary - Glass Card */}
+        {/* Add Itinerary – Prominent Card */}
         <View className="mb-10">
-          <BlurView intensity={25} tint="light" className="rounded-[32px] overflow-hidden shadow-sm">
-            <View className="bg-white/20 p-1">
-              <AddItinerary />
-            </View>
-          </BlurView>
+          <AddItinerary />
         </View>
 
-        {/* Buddy Matches - Glass Card */}
+        {/* Buddy Matches – Section */}
         <View className="mb-8">
-          <View className="flex-row items-center justify-between mb-4 px-1">
-            <View>
-              <Text className="text-xl font-bold tracking-tight text-rs-dark">Find Matches</Text>
-              <Text className="text-sm font-medium text-rs-gray mt-0.5">
-                Travelers heading your way
-              </Text>
-            </View>
+          <View className="flex-row items-center space-x-2 mb-3">
+            <Ionicons name="people" size={20} color="#30AF5B" />
+            <Text className="text-lg font-bold tracking-tight text-hi-dark">
+              Find Matches
+            </Text>
           </View>
-          <BlurView intensity={20} tint="light" className="rounded-2xl overflow-hidden">
-            <TouchableOpacity 
-              activeOpacity={0.8} 
-              onPress={() => navigation.navigate('Chat')}
-              className="bg-white/30"
-            >
-              <BuddyMatch />
-            </TouchableOpacity>
-          </BlurView>
+          <Text className="text-sm font-medium text-hi-gray-30 mb-4">
+            Travelers heading your way
+          </Text>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('Chat')}
+            className="bg-white rounded-3xl shadow-sm shadow-gray-200 border border-hi-gray-10 overflow-hidden"
+          >
+            <BuddyMatch />
+          </TouchableOpacity>
         </View>
 
-        {/* Feeling Lost? - Prominent Glass Card with Gradient Border */}
+        {/* Feeling Lost? – Dark Promo Card (Hilink "Get App" Style) */}
         <View className="mb-20 mt-5">
-          <BlurView intensity={40} tint="dark" className="rounded-[32px] overflow-hidden">
-            <LinearGradient
-              colors={['#30AF5B', '#1e7e3e']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              className="absolute top-0 left-0 right-0 bottom-0"
-              style={{ opacity: 0.15 }}
-            />
-            <View className="p-6 border border-white/30 bg-black/10">
-              <Text className="text-2xl font-black tracking-tight text-white">Feeling Lost?</Text>
-              <Text className="mt-2 text-sm font-medium leading-6 text-white/90">
-                Our RouteSync engine matches you with travelers who know the way.
-              </Text>
-              
-              {/* Glass Button */}
-              <BlurView intensity={60} tint="dark" className="mt-6 self-start rounded-2xl overflow-hidden">
-                <TouchableOpacity
-                  className="px-6 py-3.5 flex-row items-center"
-                  onPress={() => navigation.navigate('Matches')}
-                  activeOpacity={0.7}
-                >
-                  <Text className="text-base font-bold text-white mr-2">Get Started</Text>
-                  <Text className="text-white text-lg">→</Text>
-                </TouchableOpacity>
-              </BlurView>
+          <View className="bg-hi-dark rounded-4xl p-6 shadow-lg shadow-gray-900/20 relative overflow-hidden">
+            {/* Subtle background circles */}
+            <View className="absolute -right-10 -top-10 w-40 h-40 bg-white/5 rounded-full" />
+            <View className="absolute -left-8 -bottom-8 w-32 h-32 bg-hi-green/10 rounded-full" />
+
+            <View className="flex-row items-center justify-between mb-3 z-10">
+              <View className="w-12 h-12 bg-white/10 rounded-full items-center justify-center">
+                <Ionicons name="compass" size={24} color="#30AF5B" />
+              </View>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Matches')}
+                className="bg-hi-green px-5 py-2.5 rounded-full"
+              >
+                <Text className="text-white font-bold text-sm">Get Started →</Text>
+              </TouchableOpacity>
             </View>
-          </BlurView>
+            <Text className="text-2xl font-black tracking-tight text-white z-10">
+              Feeling Lost?
+            </Text>
+            <Text className="mt-2 text-sm font-medium leading-6 text-white/60 z-10">
+              Our RouteSync engine matches you with travelers who know the way.
+            </Text>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>

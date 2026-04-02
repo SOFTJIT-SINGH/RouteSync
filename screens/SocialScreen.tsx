@@ -34,7 +34,7 @@ const FEED_POSTS = [
     image:
       'https://images.unsplash.com/photo-1593693397690-362cb9666c89?q=80&w=1000&auto=format&fit=crop',
     caption:
-      'Chasing sunsets and surfing waves. If anyone is around south cliff tonight, let’s grab seafood! 🌊🏄‍♂️',
+      'Chasing sunsets and surfing waves. If anyone is around south cliff tonight, let\'s grab seafood! 🌊🏄‍♂️',
     likes: 128,
     comments: 15,
     time: '5 hours ago',
@@ -67,31 +67,31 @@ export default function SocialScreen() {
         <View className="flex-row items-center">
           <Image
             source={{ uri: item.user.avatar }}
-            className="h-10 w-10 rounded-full bg-gray-200"
+            className="h-10 w-10 rounded-full bg-hi-gray-10"
           />
           <View className="ml-3">
-            <Text className="text-base font-bold leading-tight text-gray-900">
+            <Text className="text-base font-bold leading-tight text-hi-dark">
               {item.user.name}
             </Text>
             <View className="mt-0.5 flex-row items-center">
               <FontAwesome6 name="location-dot" size={10} color="#30AF5B" />
-              <Text className="ml-1 text-xs font-semibold text-gray-500">{item.location}</Text>
+              <Text className="ml-1 text-xs font-semibold text-hi-gray-30">{item.location}</Text>
             </View>
           </View>
         </View>
         <TouchableOpacity className="h-8 w-8 items-center justify-center">
-          <Feather name="more-horizontal" size={20} color="#9CA3AF" />
+          <Feather name="more-horizontal" size={20} color="#A2A2A2" />
         </TouchableOpacity>
       </View>
 
-      {/* 2. The Image with Glassmorphism Overlay */}
-      <View className="relative h-[350px] w-full overflow-hidden rounded-[32px] bg-gray-100 shadow-sm shadow-gray-200">
+      {/* 2. The Image */}
+      <View className="relative h-[350px] w-full overflow-hidden rounded-4xl bg-hi-gray-10 shadow-sm shadow-gray-200 border border-hi-gray-10">
         <Image source={{ uri: item.image }} className="h-full w-full" resizeMode="cover" />
 
-        {/* Floating "Travel Buddy Needed" Tag (Example of premium UI detail) */}
+        {/* Floating Tag */}
         {item.id === '1' && (
-          <View className="absolute right-4 top-4 flex-row items-center rounded-full border border-white/20 bg-black/40 px-3 py-1.5 backdrop-blur-md">
-            <View className="mr-2 h-2 w-2 rounded-full bg-[#30AF5B]" />
+          <View className="absolute right-4 top-4 flex-row items-center rounded-full bg-hi-dark/70 px-3 py-1.5">
+            <View className="mr-2 h-2 w-2 rounded-full bg-hi-green" />
             <Text className="text-xs font-bold tracking-wide text-white">Looking for buddies</Text>
           </View>
         )}
@@ -104,42 +104,42 @@ export default function SocialScreen() {
             <Ionicons
               name={item.isLiked ? 'heart' : 'heart-outline'}
               size={26}
-              color={item.isLiked ? '#EF4444' : '#1F2937'}
+              color={item.isLiked ? '#EF4444' : '#292C27'}
             />
             <Text
-              className={`ml-1.5 font-bold ${item.isLiked ? 'text-[#EF4444]' : 'text-gray-700'}`}>
+              className={`ml-1.5 font-bold ${item.isLiked ? 'text-red-500' : 'text-hi-dark'}`}>
               {item.likes}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity className="ml-4 flex-row items-center">
-            <Ionicons name="chatbubble-outline" size={24} color="#1F2937" />
-            <Text className="ml-1.5 font-bold text-gray-700">{item.comments}</Text>
+            <Ionicons name="chatbubble-outline" size={24} color="#292C27" />
+            <Text className="ml-1.5 font-bold text-hi-dark">{item.comments}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity className="ml-4 flex-row items-center">
-            <Feather name="send" size={22} color="#1F2937" />
+            <Feather name="send" size={22} color="#292C27" />
           </TouchableOpacity>
         </View>
 
         <TouchableOpacity>
-          <Feather name="bookmark" size={24} color="#1F2937" />
+          <Feather name="bookmark" size={24} color="#292C27" />
         </TouchableOpacity>
       </View>
 
       {/* 4. Caption */}
       <View className="mt-3 px-1">
-        <Text className="text-sm font-medium leading-relaxed text-gray-800">
-          <Text className="mr-2 font-bold text-gray-900">{item.user.name} </Text>
+        <Text className="text-sm font-medium leading-relaxed text-hi-gray-50">
+          <Text className="mr-2 font-bold text-hi-dark">{item.user.name} </Text>
           {item.caption}
         </Text>
-        <Text className="mt-1.5 text-xs font-semibold text-gray-400">{item.time}</Text>
+        <Text className="mt-1.5 text-xs font-semibold text-hi-gray-20">{item.time}</Text>
       </View>
     </View>
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-[#FAFAFA]" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-hi-bg" edges={['top']}>
       <StatusBar barStyle="dark-content" backgroundColor="#FAFAFA" />
 
       <View className="z-50 px-5 pb-2 pt-2">
@@ -147,17 +147,9 @@ export default function SocialScreen() {
       </View>
 
       {/* Header */}
-      
       <View className="flex-row items-center justify-between px-6 pb-4">
-        <Text className="text-2xl font-black tracking-tight text-gray-900 px-5 mt-3">Community Feed</Text>
+        <Text className="text-2xl font-black tracking-tight text-hi-dark px-5 mt-3">Community Feed</Text>
       </View>
-
-      {/* <View className="px-5 py-3 flex-row justify-between items-center bg-[#FAFAFA] z-10">
-        <Text className="text-2xl font-black text-gray-900 tracking-tight">Community</Text>
-        <TouchableOpacity className="w-10 h-10 bg-white rounded-full items-center justify-center border border-gray-200 shadow-sm shadow-gray-100">
-          <Feather name="plus" size={20} color="#1F2937" />
-        </TouchableOpacity>
-      </View> */}
 
       {/* Feed */}
       <FlatList

@@ -23,7 +23,7 @@ export default function HeroButtons() {
 
   return (
     <View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 24 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 24, paddingVertical: 4 }}>
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           const IconComponent = tab.type === 'Ionicons' ? Ionicons : Feather;
@@ -33,23 +33,24 @@ export default function HeroButtons() {
               key={tab.id}
               activeOpacity={0.8}
               onPress={() => handlePress(tab)}
-              // BUG FIX: Removed NativeWind 'shadow-*' classes from className. 
-              // NativeWind crashes and throws a fake Navigation error if shadows change on click!
-              className={`flex-row items-center px-5 py-3.5 rounded-[16px] mr-3 border transition-colors ${
-                isActive 
-                  ? 'bg-[#30AF5B] border-[#30AF5B]' 
-                  : 'bg-white border-gray-100'
-              }`}
-              // We use standard React Native shadows instead to bypass the bug safely
-              style={isActive 
-                ? { shadowColor: '#064e3b', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8, elevation: 4 }
-                : { shadowColor: '#9ca3af', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 }
-              }
+              className="mr-3"
             >
-              <IconComponent name={tab.icon as any} size={18} color={isActive ? 'white' : '#1F2937'} />
-              <Text className={`font-bold ml-2 ${isActive ? 'text-white' : 'text-gray-900'}`}>
-                {tab.id}
-              </Text>
+              <View
+                className={`flex-row items-center px-5 py-3 rounded-full border ${
+                  isActive 
+                    ? 'border-hi-dark bg-hi-dark shadow-md shadow-gray-400/30' 
+                    : 'border-hi-gray-10 bg-white'
+                }`}
+              >
+                <IconComponent 
+                  name={tab.icon as any} 
+                  size={18} 
+                  color={isActive ? '#FFFFFF' : '#7B7B7B'} 
+                />
+                <Text className={`font-bold ml-2 text-sm ${isActive ? 'text-white' : 'text-hi-gray-30'}`}>
+                  {tab.id}
+                </Text>
+              </View>
             </TouchableOpacity>
           );
         })}

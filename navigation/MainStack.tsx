@@ -1,4 +1,4 @@
-// MainStack.tsx (or AppNavigator.tsx)
+// MainStack.tsx
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, Image, TouchableOpacity, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -25,24 +25,24 @@ import EditProfileScreen from '../screens/EditProfileScreen';
 // Placeholder screens for drawer items
 const SavedTripsScreen = () => (
   <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FAFAFA' }}>
-    <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Saved Itineraries</Text>
+    <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#292C27' }}>Saved Itineraries</Text>
   </View>
 );
 
 const SettingsScreen = () => (
   <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FAFAFA' }}>
-    <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Settings</Text>
+    <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#292C27' }}>Settings</Text>
   </View>
 );
 
-// Safe fallback avatar (no local require – avoids resolution error)
+// Safe fallback avatar
 const DEFAULT_AVATAR_URL = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150&auto=format&fit=crop';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
 
-// Custom Drawer Content
+// ─── Custom Drawer Content (Hilink Dark Style) ───
 function CustomDrawerContent(props: any) {
   const insets = useSafeAreaInsets();
   const [profile, setProfile] = useState<any>(null);
@@ -75,27 +75,27 @@ function CustomDrawerContent(props: any) {
     }, [])
   );
 
-  const displayName = profile?.first_name || profile?.full_name || 'Soft';
-  const username = profile?.username || 'Softjit_Singh';
+  const displayName = profile?.first_name || profile?.full_name || 'Traveler';
+  const username = profile?.username || 'explorer';
   const avatarUrl = profile?.avatar_url || DEFAULT_AVATAR_URL;
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#059669', paddingTop: insets.top + 16, paddingBottom: insets.bottom, justifyContent: 'space-between', borderRadius: 16 }}>
+    <View style={{ flex: 1, backgroundColor: '#292C27', paddingTop: insets.top + 16, paddingBottom: insets.bottom, justifyContent: 'space-between' }}>
       <DrawerContentScrollView {...props} contentContainerStyle={{ flexGrow: 1, paddingTop: 0 }}>
         {/* Header */}
-        <View style={{ paddingHorizontal: 24, paddingTop: 24, paddingBottom: 24, backgroundColor: '#047857', marginBottom: 16, position: 'relative', borderRadius: 18  }}>
+        <View style={{ paddingHorizontal: 24, paddingTop: 24, paddingBottom: 24, backgroundColor: '#1f211e', marginBottom: 16, borderRadius: 18, marginHorizontal: 8 }}>
           <TouchableOpacity
             onPress={() => props.navigation.closeDrawer()}
-            style={{ position: 'absolute', top: 16, right: 16, width: 40, height: 40, backgroundColor: '#059669', borderRadius: 20, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#6ee7b7' }}
+            style={{ position: 'absolute', top: 16, right: 16, width: 36, height: 36, backgroundColor: '#292C27', borderRadius: 18, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#3a3d38' }}
           >
-            <Feather name="x" size={20} color="#a7f3d0" />
+            <Feather name="x" size={18} color="#7B7B7B" />
           </TouchableOpacity>
           <Image
             source={{ uri: avatarUrl }}
-            style={{ width: 80, height: 80, borderRadius: 40, borderWidth: 4, borderColor: 'white', marginBottom: 16, backgroundColor: '#064e3b' }}
+            style={{ width: 72, height: 72, borderRadius: 36, borderWidth: 3, borderColor: '#30AF5B', marginBottom: 16, backgroundColor: '#1f211e' }}
           />
-          <Text style={{ fontSize: 24, fontWeight: '900', color: 'white', letterSpacing: -0.5 }}>{displayName}</Text>
-          <Text style={{ color: '#d1fae5', fontWeight: 'bold', fontSize: 14, marginTop: 4 }}>@{username}</Text>
+          <Text style={{ fontSize: 22, fontWeight: '900', color: 'white', letterSpacing: -0.5 }}>{displayName}</Text>
+          <Text style={{ color: '#30AF5B', fontWeight: 'bold', fontSize: 13, marginTop: 4 }}>@{username}</Text>
         </View>
 
         {/* Drawer Items */}
@@ -107,18 +107,18 @@ function CustomDrawerContent(props: any) {
       {/* Sign Out Button */}
       <View style={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 24 }}>
         <TouchableOpacity
-          style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#047857', padding: 16, borderRadius: 16, borderWidth: 1, borderColor: '#10b981' }}
+          style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#1f211e', padding: 16, borderRadius: 16, borderWidth: 1, borderColor: '#3a3d38' }}
           onPress={async () => await supabase.auth.signOut()}
         >
-          <Feather name="log-out" size={20} color="#fda4af" />
-          <Text style={{ color: '#fda4af', fontWeight: 'bold', marginLeft: 12, fontSize: 16 }}>Sign Out</Text>
+          <Feather name="log-out" size={20} color="#EF4444" />
+          <Text style={{ color: '#EF4444', fontWeight: 'bold', marginLeft: 12, fontSize: 15 }}>Sign Out</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 }
 
-// Tab Navigator (fixed positioning)
+// ─── Tab Navigator ───
 function TabNavigator() {
   const insets = useSafeAreaInsets();
 
@@ -130,15 +130,15 @@ function TabNavigator() {
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
-          borderTopColor: '#F3F4F6',
-          height: 60 + insets.bottom,
+          borderTopColor: '#EEEEEE',
+          height: 70 + insets.bottom,
           paddingBottom: insets.bottom,
           paddingTop: 8,
           elevation: 10,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 10,
+          shadowOpacity: 0.04,
+          shadowRadius: 12,
         },
         tabBarItemStyle: {
           flex: 1,
@@ -153,8 +153,8 @@ function TabNavigator() {
           else if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
 
           return (
-            <View style={{ alignItems: 'center', justifyContent: 'center', width: 48, height: 48, borderRadius: 16, backgroundColor: focused ? '#e8f5e9' : 'transparent' }}>
-              <Ionicons name={iconName} size={24} color={focused ? '#30AF5B' : '#9CA3AF'} />
+            <View style={{ alignItems: 'center', justifyContent: 'center', width: 44, height: 44, borderRadius: 22, backgroundColor: focused ? '#30AF5B' : 'transparent' }}>
+              <Ionicons name={iconName} size={22} color={focused ? '#fff' : '#A2A2A2'} />
             </View>
           );
         },
@@ -168,7 +168,7 @@ function TabNavigator() {
   );
 }
 
-// Main Stack (no duplicate screens)
+// ─── Main Stack ───
 function MainStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -180,7 +180,7 @@ function MainStack() {
   );
 }
 
-// Root Drawer Navigator – ensure no stray spaces/comments inside
+// ─── Root Drawer Navigator ───
 export default function AppNavigator() {
   return (
     <Drawer.Navigator
@@ -190,10 +190,11 @@ export default function AppNavigator() {
         drawerType: 'front',
         drawerStyle: {
           width: 300,
+          backgroundColor: '#292C27',
         },
-        drawerActiveBackgroundColor: 'rgba(255, 255, 255, 0.15)',
-        drawerActiveTintColor: '#ffffff',
-        drawerInactiveTintColor: '#d1fae5',
+        drawerActiveBackgroundColor: 'rgba(48, 175, 91, 0.15)',
+        drawerActiveTintColor: '#FFFFFF',
+        drawerInactiveTintColor: '#7B7B7B',
         drawerLabelStyle: { fontWeight: 'bold', fontSize: 16, marginLeft: -10 },
       }}
     >
