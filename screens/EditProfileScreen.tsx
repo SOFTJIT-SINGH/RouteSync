@@ -59,6 +59,7 @@ export default function EditProfileScreen({ navigation }: any) {
         username: username,
         bio: bio,
         avatar_url: avatarUrl,
+        updated_at: new Date(),
       };
 
       const { error } = await supabase.from('profiles').upsert(updates);
