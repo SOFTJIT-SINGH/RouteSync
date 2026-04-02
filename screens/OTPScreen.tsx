@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
@@ -9,6 +9,7 @@ export default function OTPScreen({ route, navigation }: any) {
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(60);
+  const inputRef = React.useRef<TextInput>(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -51,14 +52,30 @@ export default function OTPScreen({ route, navigation }: any) {
       </View>
 
       <View className="mt-12">
-        <View className="bg-gray-50 rounded-3xl border border-gray-100 p-6 items-center">
+        <View className="flex-row justify-between pt-4 pb-4 px-2" onStartShouldSetResponder={() => true} onResponderRelease={() => inputRef.current?.focus()}>
+          {[0, 1, 2, 3, 4, 5].map((index) => {
+            const digit = otp[index] || '';
+            const isActive = otp.length === index || (otp.length === 6 && index === 5);
+            return (
+               <View 
+                  key={index} 
+                  className={`w-12 h-14 rounded-2xl items-center justify-center border-2 ${isActive ? 'border-[#30AF5B] bg-green-50' : 'border-gray-100 bg-gray-50'}`}
+               >
+                 <Text className="text-2xl font-black text-gray-900">{digit}</Text>
+               </View>
+            );
+          })}
+          
+          {/* Hidden true input mechanism overlay */}
           <TextInput
+            ref={inputRef}
             value={otp}
             onChangeText={setOtp}
-            placeholder="000000"
-            keyboardType="number-pad"
             maxLength={6}
-            className="text-5xl font-black tracking-[10px] text-[#30AF5B]"
+            keyboardType="number-pad"
+            autoFocus={true}
+            className="absolute opacity-0 w-full h-full"
+            style={{ width: '100%', height: '100%', position: 'absolute', opacity: 0 }}
           />
         </View>
 
