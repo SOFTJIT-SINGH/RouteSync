@@ -65,7 +65,7 @@ export default function ProfileScreen({ navigation }: any) {
     );
   }
 
-  const displayName = profile?.full_name || profile?.first_name || 'Jaggu';
+  const displayName = profile?.full_name || profile?.first_name || 'Soft';
   const username = profile?.username || displayName.toLowerCase().replace(/\s/g, '') + '_travels';
   const avatarUrl = profile?.avatar_url || 'https://i.pravatar.cc/150';
   const bio = profile?.bio || 'Exploring the world, one city at a time. Always down for an adventure!';
@@ -76,7 +76,6 @@ export default function ProfileScreen({ navigation }: any) {
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false} bounces={false}>
         
-        {/* 1. Cover Photo & Header Actions */}
         <View className="relative">
           <Image 
             source={{ uri: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1000&auto=format&fit=crop' }} 
@@ -84,8 +83,6 @@ export default function ProfileScreen({ navigation }: any) {
             resizeMode="cover"
           />
           <View className="absolute w-full h-full bg-black/20" />
-          
-          {/* Back Button */}
           <TouchableOpacity 
             onPress={() => navigation.goBack()}
             style={{ top: insets.top + 10, left: 24 }}
@@ -106,14 +103,11 @@ export default function ProfileScreen({ navigation }: any) {
 
         {/* 2. Profile Info (Overlapping Card) */}
         <View className="bg-hi-bg rounded-t-4xl -mt-8 px-6 pt-0 pb-6 border-t border-white shadow-sm shadow-gray-200">
-          
           <View className="flex-row justify-between items-end -mt-12 mb-4">
-            {/* Avatar */}
             <Image 
               source={{ uri: avatarUrl }} 
               className="w-24 h-24 rounded-full border-4 border-hi-bg bg-hi-gray-10"
             />
-            {/* Edit Profile Button */}
             <TouchableOpacity 
               onPress={() => navigation.navigate('EditProfile')}
               className="bg-hi-dark px-5 py-2.5 rounded-full mb-2 shadow-sm shadow-gray-900/20"

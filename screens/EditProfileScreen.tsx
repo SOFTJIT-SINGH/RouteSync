@@ -59,7 +59,6 @@ export default function EditProfileScreen({ navigation }: any) {
         username: username,
         bio: bio,
         avatar_url: avatarUrl,
-        updated_at: new Date(),
       };
 
       const { error } = await supabase.from('profiles').upsert(updates);
@@ -94,7 +93,7 @@ export default function EditProfileScreen({ navigation }: any) {
             <Ionicons name="close" size={24} color="#1F2937" />
           </TouchableOpacity>
           <Text className="text-lg font-black text-gray-900 tracking-tight">Edit Profile</Text>
-          <View className="w-10" /> {/* Spacer for centering */}
+          <View className="w-10" />
         </View>
 
         <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
@@ -115,8 +114,6 @@ export default function EditProfileScreen({ navigation }: any) {
 
           {/* Form Fields */}
           <View className="px-5 space-y-6 pb-32">
-            
-            {/* Full Name */}
             <View>
               <Text className="text-gray-900 font-bold text-sm mb-3 ml-1">Full Name</Text>
               <View className="bg-white p-4 rounded-[24px] border border-gray-100 shadow-sm shadow-gray-50 flex-row items-center">
@@ -131,7 +128,6 @@ export default function EditProfileScreen({ navigation }: any) {
               </View>
             </View>
 
-            {/* Username */}
             <View>
               <Text className="text-gray-900 font-bold text-sm mb-3 ml-1">Username</Text>
               <View className="bg-white p-4 rounded-[24px] border border-gray-100 shadow-sm shadow-gray-50 flex-row items-center">
