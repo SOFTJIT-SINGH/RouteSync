@@ -180,13 +180,13 @@ export default function SignupScreen({ navigation }: any) {
 
             <View className="flex-row gap-4">
               <View className="flex-1">
-                <InputField label="First Name" value={firstName} onChangeText={setFirstName} placeholder="Priya" icon="user" />
+                <InputField label="First Name" value={firstName} onChangeText={setFirstName} placeholder="Soft" icon="user" />
               </View>
               <View className="flex-1">
-                <InputField label="Last Name" value={lastName} onChangeText={setLastName} placeholder="Patel" />
+                <InputField label="Last Name" value={lastName} onChangeText={setLastName} placeholder="Singh" />
               </View>
             </View>
-            <InputField label="Username" value={username} onChangeText={setUsername} placeholder="priya_travels" icon="at-sign" autoCapitalize="none" />
+            <InputField label="Username" value={username} onChangeText={setUsername} placeholder="Softjit_singh" icon="at-sign" autoCapitalize="none" />
             <InputField label="Bio (optional)" value={bio} onChangeText={setBio} placeholder="Chasing sunsets and trying local street food..." icon="edit-3" multiline />
           </View>
         );
