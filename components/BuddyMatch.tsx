@@ -128,7 +128,7 @@ export default function BuddyMatch({ navigation }: { navigation: any }) {
          
          <TouchableOpacity 
            activeOpacity={0.8}
-           onPress={() => navigation.getParent()?.navigate('Chat')}
+           onPress={() => navigation.navigate('Chat')}
            className="bg-hi-dark px-5 py-3 rounded-full flex-row items-center"
          >
            <Text className="text-white font-black mr-2 text-sm">Say Hi</Text>

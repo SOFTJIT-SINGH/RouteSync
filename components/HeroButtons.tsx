@@ -14,8 +14,12 @@ export default function HeroButtons({ navigation }: { navigation: any }) {
 
   const handlePress = (tab: any) => {
     setActiveTab(tab.id);
-    // navigation is HomeScreen's Tab navigator — can navigate directly to sibling tabs
-    navigation.navigate(tab.tab);
+    // Use the navigation prop directly
+    if (navigation && navigation.navigate) {
+      navigation.navigate(tab.tab);
+    } else {
+      console.error('Navigation prop is missing or invalid', navigation);
+    }
   };
 
   return (
