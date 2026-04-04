@@ -21,17 +21,13 @@ import CreateTripScreen from '../screens/CreateTripScreen';
 import ChatScreen from '../screens/ChatScreen';
 import SocialScreen from '../screens/SocialScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
+import NotificationsScreen from '../screens/NotificationsScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 
-// Placeholder screens for drawer items
+// Placeholder screen for drawer items
 const SavedTripsScreen = () => (
   <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FAFAFA' }}>
     <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#292C27' }}>Saved Itineraries</Text>
-  </View>
-);
-
-const SettingsScreen = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FAFAFA' }}>
-    <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#292C27' }}>Settings</Text>
   </View>
 );
 
@@ -47,8 +43,7 @@ function CustomDrawerContent(props: any) {
   const insets = useSafeAreaInsets();
   const [profile, setProfile] = useState<any>(null);
 
-  useFocusEffect(
-    useCallback(() => {
+  useEffect(() => {
       let isActive = true;
       const fetchUser = async () => {
         const { data: { user } } = await supabase.auth.getUser();
@@ -72,8 +67,7 @@ function CustomDrawerContent(props: any) {
       };
       fetchUser();
       return () => { isActive = false; };
-    }, [])
-  );
+  }, []);
 
   const displayName = profile?.first_name || profile?.full_name || 'Traveler';
   const username = profile?.username || 'explorer';
@@ -131,8 +125,7 @@ function TabNavigator() {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
           borderTopColor: '#EEEEEE',
-          // height: 70 + insets.bottom,
-          height: insets.bottom,
+          height: 60 + insets.bottom,
           paddingBottom: insets.bottom,
           paddingTop: 8,
           elevation: 10,
@@ -177,6 +170,8 @@ function MainStack() {
       <Stack.Screen name="Chat" component={ChatScreen} />
       <Stack.Screen name="CreateTrip" component={CreateTripScreen} options={{ presentation: 'modal' }} />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ presentation: 'modal' }} />
+      <Stack.Screen name="Notifications" component={NotificationsScreen} />
+      <Stack.Screen name="Settings" component={SettingsScreen} />
     </Stack.Navigator>
   );
 }

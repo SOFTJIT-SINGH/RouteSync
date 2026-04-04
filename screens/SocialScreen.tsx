@@ -148,7 +148,7 @@ export default function SocialScreen() {
 
       {/* Header */}
       <View className="flex-row items-center justify-between px-6 pb-4">
-        <Text className="text-2xl font-black tracking-tight text-hi-dark px-5 mt-3">Community Feed</Text>
+        <Text className="text-2xl font-black tracking-tight text-hi-dark mt-3">Community Feed</Text>
       </View>
 
       {/* Feed */}

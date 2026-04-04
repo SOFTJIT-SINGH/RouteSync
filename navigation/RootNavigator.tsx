@@ -4,7 +4,6 @@ import { View, ActivityIndicator } from 'react-native';
 import { supabase } from '../lib/supabase';
 import AuthStack from './AuthStack';
 import MainStack from './MainStack';
-import { NavigationContainer } from '@react-navigation/native';
 
 export default function RootNavigator() {
   const [session, setSession] = useState<any>(null);
@@ -25,16 +24,11 @@ export default function RootNavigator() {
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center bg-white">
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
         <ActivityIndicator size="large" color="#30AF5B" />
       </View>
     );
   }
 
-  // No <NavigationContainer> here!
-  return (
-    <NavigationContainer>
-      {session ? <MainStack /> : <AuthStack />}
-    </NavigationContainer>
-  );
+  return session ? <MainStack /> : <AuthStack />;
 }

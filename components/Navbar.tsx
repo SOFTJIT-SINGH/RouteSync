@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native'; 
+import { useNavigation } from '@react-navigation/native';
 import { DrawerActions } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 
 export default function Navbar() {
   const [profile, setProfile] = useState<any>(null);
-  const navigation = useNavigation<any>(); 
+  const navigation = useNavigation<any>();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -20,7 +20,7 @@ export default function Navbar() {
     fetchUser();
   }, []);
 
-  const displayName = profile?.first_name || profile?.full_name?.split(' ')[0] || 'Jaggu';
+  const displayName = profile?.first_name || profile?.full_name?.split(' ')[0] || 'Soft';
   const avatarUrl = profile?.avatar_url || 'https://i.pravatar.cc/150';
 
   return (

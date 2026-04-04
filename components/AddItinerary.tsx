@@ -1,10 +1,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { FontAwesome6 } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
 
-export default function AddItinerary() {
-  const navigation = useNavigation<any>();
+export default function AddItinerary({ navigation }: { navigation: any }) {
 
   return (
     <View className="bg-hi-dark rounded-4xl p-6 relative overflow-hidden">
@@ -26,7 +24,7 @@ export default function AddItinerary() {
 
           <TouchableOpacity
             activeOpacity={0.85}
-            onPress={() => navigation.navigate('CreateTrip')}
+            onPress={() => navigation.getParent()?.navigate('CreateTrip')}
             className="bg-hi-green px-6 py-3.5 rounded-full flex-row items-center self-start"
           >
             <FontAwesome6 name="plus" size={14} color="white" />

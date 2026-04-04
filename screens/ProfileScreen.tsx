@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image, ActivityIndicator, Alert, StatusBar } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons, Feather, FontAwesome6 } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 
@@ -10,9 +11,11 @@ export default function ProfileScreen({ navigation }: any) {
   const [myTrips, setMyTrips] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchUserData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserData();
+    }, [])
+  );
 
   const fetchUserData = async () => {
     try {
@@ -93,7 +96,7 @@ export default function ProfileScreen({ navigation }: any) {
 
           {/* Settings Button */}
           <TouchableOpacity 
-            onPress={() => console.log('Settings')}
+            onPress={() => navigation.navigate('Settings')}
             style={{ top: insets.top + 10, right: 24 }}
             className="absolute w-10 h-10 bg-hi-dark/50 rounded-full items-center justify-center border border-white/20"
           >

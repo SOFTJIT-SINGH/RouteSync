@@ -63,13 +63,13 @@ export default function ChatScreen({ navigation }: any) {
   };
 
   return (
-    <View className="flex-1 bg-[#FAFAFA]">
+    <View className="flex-1 bg-hi-bg">
       <StatusBar barStyle="dark-content" />
       
       {/* 1. Sticky Header */}
       <View 
         style={{ paddingTop: insets.top }} 
-        className="bg-white/90 backdrop-blur-md border-b border-gray-100 z-10 shadow-sm shadow-gray-100/50"
+        className="bg-white border-b border-hi-gray-10 z-10 shadow-sm shadow-gray-100/50"
       >
         <View className="px-4 py-3 flex-row items-center justify-between">
           <View className="flex-row items-center">

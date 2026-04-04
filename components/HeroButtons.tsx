@@ -1,24 +1,21 @@
 import React, { useState } from 'react';
 import { ScrollView, TouchableOpacity, Text, View } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
 
-export default function HeroButtons() {
-  const navigation = useNavigation<any>();
+export default function HeroButtons({ navigation }: { navigation: any }) {
   const [activeTab, setActiveTab] = useState('Discover');
 
   const tabs = [
-    { id: 'Discover', icon: 'compass', type: 'Ionicons', route: 'Home' },
-    { id: 'Buddies', icon: 'people', type: 'Ionicons', route: 'Matches' },
-    { id: 'My Trips', icon: 'map', type: 'Feather', route: 'Profile' },
-    { id: 'Community', icon: 'chatbubbles', type: 'Ionicons', route: 'SocialScreen' }, 
+    { id: 'Discover', icon: 'compass', type: 'Ionicons', tab: 'Home' },
+    { id: 'Buddies', icon: 'people', type: 'Ionicons', tab: 'Matches' },
+    { id: 'My Trips', icon: 'map', type: 'Feather', tab: 'Profile' },
+    { id: 'Community', icon: 'chatbubbles', type: 'Ionicons', tab: 'Community' },
   ];
 
   const handlePress = (tab: any) => {
     setActiveTab(tab.id);
-    if (tab.route !== 'Home') {
-      navigation.navigate(tab.route);
-    }
+    // navigation is HomeScreen's Tab navigator — can navigate directly to sibling tabs
+    navigation.navigate(tab.tab);
   };
 
   return (

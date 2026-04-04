@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView, Image,
   TextInput, StatusBar, ActivityIndicator, RefreshControl
@@ -72,9 +72,22 @@ export default function MatchesScreen({ navigation }: any) {
     return `${startDate} - ${endDate}`;
   };
 
-  const getCompatibility = (match: any) => {
-    return Math.floor(Math.random() * (98 - 70 + 1) + 70);
-  };
+  // Stable compatibility score based on trip ID hash — won't flicker on re-render
+  const getCompatibility = useMemo(() => {
+    const cache: Record<string, number> = {};
+    return (match: any) => {
+      const id = match.id || '';
+      if (!cache[id]) {
+        let hash = 0;
+        for (let i = 0; i < id.length; i++) {
+          hash = ((hash << 5) - hash) + id.charCodeAt(i);
+          hash |= 0;
+        }
+        cache[id] = 70 + (Math.abs(hash) % 29); // 70-98 range
+      }
+      return cache[id];
+    };
+  }, [matches]);
 
   const filteredMatches = matches.filter(match => {
     if (!searchQuery) return true;

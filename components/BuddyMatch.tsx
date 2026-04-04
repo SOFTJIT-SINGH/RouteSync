@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigation } from '@react-navigation/native';
 import { View, Text, Image, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 
-export default function BuddyMatch() {
+export default function BuddyMatch({ navigation }: { navigation: any }) {
   const [match, setMatch] = useState<any>(null);
   const [trip, setTrip] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const navigation = useNavigation<any>();
 
   useEffect(() => {
     fetchBuddyMatch();
@@ -130,7 +128,7 @@ export default function BuddyMatch() {
          
          <TouchableOpacity 
            activeOpacity={0.8}
-           onPress={() => navigation.navigate('Chat')}
+           onPress={() => navigation.getParent()?.navigate('Chat')}
            className="bg-hi-dark px-5 py-3 rounded-full flex-row items-center"
          >
            <Text className="text-white font-black mr-2 text-sm">Say Hi</Text>

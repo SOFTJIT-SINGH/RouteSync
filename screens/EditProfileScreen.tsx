@@ -105,26 +105,26 @@ export default function EditProfileScreen({ navigation }: any) {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-[#FAFAFA] justify-center items-center">
+      <View className="flex-1 bg-hi-bg justify-center items-center">
         <ActivityIndicator size="large" color="#30AF5B" />
       </View>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-[#FAFAFA]" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-hi-bg" edges={['top']}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
         
         {/* Header */}
-        <View className="px-5 py-4 flex-row justify-between items-center border-b border-gray-100 bg-white z-10">
-          <TouchableOpacity onPress={() => navigation.goBack()} className="w-10 h-10 items-center justify-center bg-gray-50 rounded-full">
-            <Ionicons name="close" size={24} color="#1F2937" />
+        <View className="px-5 py-4 flex-row justify-between items-center border-b border-hi-gray-10 bg-white z-10">
+          <TouchableOpacity onPress={() => navigation.goBack()} className="w-10 h-10 items-center justify-center bg-hi-bg rounded-full border border-hi-gray-10">
+            <Ionicons name="close" size={24} color="#292C27" />
           </TouchableOpacity>
-          <Text className="text-lg font-black text-gray-900 tracking-tight">Edit Profile</Text>
+          <Text className="text-lg font-black text-hi-dark tracking-tight">Edit Profile</Text>
           <View className="w-10" />
         </View>
 
-        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        <ScrollView className="flex-1" showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           
           {/* Avatar Edit Section */}
           <View className="items-center mt-8 mb-10">
@@ -133,11 +133,11 @@ export default function EditProfileScreen({ navigation }: any) {
                 source={{ uri: avatarUrl }} 
                 className="w-28 h-28 rounded-full bg-gray-200 border-4 border-white shadow-sm shadow-gray-200"
               />
-              <TouchableOpacity className="absolute bottom-0 right-0 bg-[#30AF5B] w-10 h-10 rounded-full items-center justify-center border-4 border-[#FAFAFA] shadow-sm">
+              <TouchableOpacity className="absolute bottom-0 right-0 bg-hi-green w-10 h-10 rounded-full items-center justify-center border-4 border-hi-bg shadow-sm">
                 <Feather name="camera" size={16} color="white" />
               </TouchableOpacity>
             </View>
-            <Text className="text-sm font-bold text-[#30AF5B] mt-4">Change Profile Photo</Text>
+            <Text className="text-sm font-bold text-hi-green mt-4">Change Profile Photo</Text>
           </View>
 
           {/* Form Fields */}
@@ -280,11 +280,11 @@ export default function EditProfileScreen({ navigation }: any) {
         </ScrollView>
 
         {/* Sticky Save Button */}
-        <View className="absolute bottom-0 w-full p-5 bg-white/90 backdrop-blur-xl border-t border-gray-100">
+        <View className="absolute bottom-0 w-full p-5 bg-white border-t border-hi-gray-10">
           <TouchableOpacity 
             onPress={handleSave}
             disabled={saving}
-            className="bg-[#30AF5B] py-4 rounded-[20px] items-center shadow-lg shadow-green-900/20"
+            className="bg-hi-green py-4 rounded-full items-center shadow-lg shadow-green-900/20"
           >
             {saving ? (
               <ActivityIndicator color="white" />

@@ -42,7 +42,7 @@ export default function HomeScreen({ navigation }: any) {
 
         {/* Quick Actions – HeroButtons */}
         <View className="mb-8">
-          <HeroButtons />
+          <HeroButtons navigation={navigation} />
         </View>
 
         {/* Active Syncs – Section */}
@@ -63,7 +63,7 @@ export default function HomeScreen({ navigation }: any) {
 
         {/* Add Itinerary – Prominent Card */}
         <View className="mb-10">
-          <AddItinerary />
+          <AddItinerary navigation={navigation} />
         </View>
 
         {/* Buddy Matches – Section */}
@@ -82,7 +82,7 @@ export default function HomeScreen({ navigation }: any) {
             onPress={() => navigation.navigate('Chat')}
             className="bg-white rounded-3xl shadow-sm shadow-gray-200 border border-hi-gray-10 overflow-hidden"
           >
-            <BuddyMatch />
+            <BuddyMatch navigation={navigation} />
           </TouchableOpacity>
         </View>
 
