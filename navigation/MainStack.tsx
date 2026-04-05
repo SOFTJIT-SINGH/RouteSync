@@ -24,6 +24,8 @@ import EditProfileScreen from '../screens/EditProfileScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 
+import UserProfileScreen from '../screens/UserProfileScreen';
+
 // Placeholder screen for drawer items
 const SavedTripsScreen = () => (
   <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FAFAFA' }}>
@@ -76,7 +78,6 @@ function CustomDrawerContent(props: any) {
   return (
     <View style={{ flex: 1, backgroundColor: '#292C27', paddingTop: insets.top + 16, paddingBottom: insets.bottom, justifyContent: 'space-between' }}>
       <DrawerContentScrollView {...props} contentContainerStyle={{ flexGrow: 1, paddingTop: 0 }}>
-        {/* Header */}
         <View style={{ paddingHorizontal: 24, paddingTop: 24, paddingBottom: 24, backgroundColor: '#1f211e', marginBottom: 16, borderRadius: 18, marginHorizontal: 8 }}>
           <TouchableOpacity
             onPress={() => props.navigation.closeDrawer()}
@@ -92,13 +93,11 @@ function CustomDrawerContent(props: any) {
           <Text style={{ color: '#30AF5B', fontWeight: 'bold', fontSize: 13, marginTop: 4 }}>@{username}</Text>
         </View>
 
-        {/* Drawer Items */}
         <View style={{ flex: 1, paddingHorizontal: 12 }}>
           <DrawerItemList {...props} />
         </View>
       </DrawerContentScrollView>
 
-      {/* Sign Out Button */}
       <View style={{ paddingHorizontal: 24, paddingTop: 16, paddingBottom: 24 }}>
         <TouchableOpacity
           style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#1f211e', padding: 16, borderRadius: 16, borderWidth: 1, borderColor: '#3a3d38' }}
@@ -168,6 +167,7 @@ function MainStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="RootTabs" component={TabNavigator} />
       <Stack.Screen name="Chat" component={ChatScreen} />
+      <Stack.Screen name="UserProfile" component={UserProfileScreen} />
       <Stack.Screen name="CreateTrip" component={CreateTripScreen} options={{ presentation: 'modal' }} />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ presentation: 'modal' }} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />

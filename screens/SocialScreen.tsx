@@ -173,7 +173,10 @@ export default function SocialScreen() {
     <View className="mb-10 px-5">
       {/* 1. Header */}
       <View className="mb-3 flex-row items-center justify-between">
-        <View className="flex-row items-center">
+        <TouchableOpacity 
+          className="flex-row items-center active:opacity-75"
+          onPress={() => navigation.navigate('UserProfile', { userId: item.user.id || item.id, profile: item.user })}
+        >
           <Image source={{ uri: item.user.avatar }} className="h-11 w-11 rounded-full bg-gray-200 border border-gray-100" />
           <View className="ml-3">
             <Text className="text-[15px] font-bold text-gray-900">{item.user.name}</Text>
@@ -182,7 +185,7 @@ export default function SocialScreen() {
               <Text className="ml-1 text-xs font-semibold text-gray-500">{item.location}</Text>
             </View>
           </View>
-        </View>
+        </TouchableOpacity>
         <TouchableOpacity className="h-8 w-8 items-center justify-center">
           <Feather name="more-horizontal" size={20} color="#A2A2A2" />
         </TouchableOpacity>

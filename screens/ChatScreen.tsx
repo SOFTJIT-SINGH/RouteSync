@@ -246,7 +246,10 @@ export default function ChatScreen({ navigation, route }: any) {
               <Ionicons name="chevron-back" size={28} color="#1F2937" />
             </TouchableOpacity>
 
-            <TouchableOpacity className="flex-row items-center">
+            <TouchableOpacity 
+              className="flex-row items-center active:opacity-75"
+              onPress={() => navigation.navigate('UserProfile', { userId: buddyId, profile: buddyProfile })}
+            >
               <View className="relative">
                 <Image 
                   source={{ uri: buddyProfile.avatar }} 
@@ -276,8 +279,8 @@ export default function ChatScreen({ navigation, route }: any) {
 
       {/* 2. Chat Feed */}
       <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+        behavior={Platform.OS === 'ios' ? 'padding' : "height"}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 25}
         className="flex-1"
       >
         <FlatList

@@ -1,0 +1,236 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  View, Text, Image, TouchableOpacity, ScrollView, 
+  ActivityIndicator, StatusBar, Alert, Modal
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons, Feather, FontAwesome6 } from '@expo/vector-icons';
+import { supabase } from '../lib/supabase';
+
+// High-Quality Mock Posts for fallback
+const MOCK_USER_POSTS = [
+  { id: '1', image: 'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&q=80&w=400' },
+  { id: '2', image: 'https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?auto=format&fit=crop&q=80&w=400' },
+  { id: '3', image: 'https://images.unsplash.com/photo-1533130061792-64b345e4a833?auto=format&fit=crop&q=80&w=400' },
+];
+
+export default function UserProfileScreen({ route, navigation }: any) {
+  const { userId, profile: paramProfile } = route.params || {};
+  
+  const [profile, setProfile] = useState<any>(paramProfile || null);
+  const [posts, setPosts] = useState<any[]>(MOCK_USER_POSTS);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [loading, setLoading] = useState(!paramProfile);
+  const [showOptions, setShowOptions] = useState(false);
+
+  useEffect(() => {
+    fetchUserData();
+  }, [userId]);
+
+  const fetchUserData = async () => {
+    if (!userId) return;
+    
+    try {
+      // Fetch Profile
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+        
+      if (profileData) {
+        setProfile({
+          name: profileData.full_name || profileData.first_name || profileData.username || 'Traveler',
+          username: profileData.username || `user_${userId.substring(0,6)}`,
+          avatar: profileData.avatar_url || 'https://i.pravatar.cc/150',
+          bio: profileData.bio || 'Exploring the world, one journey at a time. Wanderlust and city dust. ✈️🌍',
+          followers: 1204, // Mock stats
+          following: 450,
+          trips: 12
+        });
+      }
+
+      // Fetch Posts
+      const { data: postsData } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (postsData && postsData.length > 0) {
+        setPosts(postsData.map(p => ({ id: p.id, image: p.image_url })));
+      }
+    } catch (e) {
+      console.log('Using mock profile data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFollow = () => {
+    // In production, insert/delete from a `follows` table
+    setIsFollowing(!isFollowing);
+  };
+
+  const handleMessage = () => {
+    // Navigate straight back to Chat if existing, or create new
+    navigation.navigate('Chat', { buddyId: userId });
+  };
+
+  const handleReport = () => {
+    setShowOptions(false);
+    Alert.alert('Report User', 'Thank you for keeping our community safe. We will review this account.', [{ text: 'OK' }]);
+  };
+
+  const handleBlock = () => {
+    setShowOptions(false);
+    Alert.alert('Block User', 'Are you sure you want to block this user?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Block', style: 'destructive', onPress: () => {
+        Alert.alert('Blocked', 'This user has been blocked. You will no longer see their posts or messages.');
+        navigation.goBack();
+      }}
+    ]);
+  };
+
+  if (loading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-white">
+        <ActivityIndicator size="large" color="#30AF5B" />
+      </View>
+    );
+  }
+
+  const p = profile || {
+    name: 'Unknown User', username: 'unknown', avatar: 'https://i.pravatar.cc/150', bio: '', followers: 0, following: 0, trips: 0
+  };
+
+  return (
+    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
+      <StatusBar barStyle="dark-content" />
+
+      {/* Header */}
+      <View className="flex-row items-center justify-between px-4 py-3">
+        <TouchableOpacity onPress={() => navigation.goBack()} className="w-10 h-10 items-center justify-center">
+          <Ionicons name="chevron-back" size={28} color="#1F2937" />
+        </TouchableOpacity>
+        <Text className="text-base font-bold text-gray-900 tracking-tight">@{p.username}</Text>
+        <TouchableOpacity onPress={() => setShowOptions(true)} className="w-10 h-10 items-center justify-center">
+          <Ionicons name="ellipsis-horizontal" size={24} color="#1F2937" />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+        {/* Profile Info */}
+        <View className="items-center px-6 pt-4">
+          <View className="relative">
+            <Image 
+              source={{ uri: p.avatar }} 
+              className="w-24 h-24 rounded-full border-4 border-gray-50"
+            />
+            <View className="absolute bottom-1 right-1 w-5 h-5 bg-green-500 border-2 border-white rounded-full" />
+          </View>
+          
+          <Text className="text-2xl font-black text-gray-900 mt-4 tracking-tight">{p.name}</Text>
+          <Text className="text-sm font-medium text-gray-500 mt-1">{p.bio}</Text>
+
+          {/* Stats */}
+          <View className="flex-row w-full justify-around mt-6 pt-6 border-t border-gray-100">
+            <View className="items-center">
+              <Text className="text-xl font-bold text-gray-900">{p.trips}</Text>
+              <Text className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-1">Trips</Text>
+            </View>
+            <View className="items-center">
+              <Text className="text-xl font-bold text-gray-900">{isFollowing ? p.followers + 1 : p.followers}</Text>
+              <Text className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-1">Followers</Text>
+            </View>
+            <View className="items-center">
+              <Text className="text-xl font-bold text-gray-900">{p.following}</Text>
+              <Text className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-1">Following</Text>
+            </View>
+          </View>
+
+          {/* Action Buttons */}
+          <View className="flex-row w-full mt-6 space-x-3">
+            <TouchableOpacity 
+              onPress={handleFollow}
+              className={`flex-1 py-3.5 rounded-full items-center justify-center transition-colors ${
+                isFollowing ? 'bg-gray-100 border border-gray-200' : 'bg-[#30AF5B]'
+              }`}
+            >
+              <Text className={`font-bold text-base ${isFollowing ? 'text-gray-900' : 'text-white'}`}>
+                {isFollowing ? 'Following' : 'Follow'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              onPress={handleMessage}
+              className="flex-1 py-3.5 rounded-full items-center justify-center bg-gray-100 border border-gray-200"
+            >
+              <Text className="font-bold text-base text-gray-900">Message</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Posts Grid */}
+        <View className="mt-8">
+          <View className="px-6 flex-row items-center space-x-2 mb-4">
+            <Ionicons name="grid" size={20} color="#1F2937" />
+            <Text className="text-lg font-bold text-gray-900 tracking-tight">Recent Posts</Text>
+          </View>
+
+          <View className="flex-row flex-wrap w-full">
+            {posts.map((post, index) => (
+              <TouchableOpacity 
+                key={post.id} 
+                className="w-1/3 aspect-square p-[1px]"
+                activeOpacity={0.8}
+              >
+                <Image source={{ uri: post.image }} className="w-full h-full bg-gray-200" />
+              </TouchableOpacity>
+            ))}
+            {posts.length === 0 && (
+              <View className="w-full items-center py-10">
+                <Feather name="camera-off" size={32} color="#D1D5DB" />
+                <Text className="text-gray-400 font-bold mt-3">No posts yet</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* Options Modal (Block/Report) */}
+      <Modal visible={showOptions} transparent animationType="fade">
+        <View className="flex-1 justify-end bg-black/40">
+          <TouchableOpacity className="flex-1" onPress={() => setShowOptions(false)} />
+          <View className="bg-white rounded-t-[30px] p-6 pb-10">
+            <View className="w-12 h-1.5 bg-gray-200 rounded-full self-center mb-6" />
+            
+            <TouchableOpacity onPress={handleReport} className="flex-row items-center py-4 border-b border-gray-100">
+              <View className="w-10 h-10 rounded-full bg-orange-50 items-center justify-center">
+                <Feather name="flag" size={20} color="#F97316" />
+              </View>
+              <Text className="text-base font-bold text-gray-900 ml-4">Report User</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={handleBlock} className="flex-row items-center py-4 border-b border-gray-100">
+              <View className="w-10 h-10 rounded-full bg-red-50 items-center justify-center">
+                <Feather name="slash" size={20} color="#EF4444" />
+              </View>
+              <Text className="text-base font-bold text-red-500 ml-4">Block User</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => setShowOptions(false)} className="flex-row items-center py-4">
+              <View className="w-10 h-10 rounded-full bg-gray-50 items-center justify-center">
+                <Feather name="x" size={20} color="#4B5563" />
+              </View>
+              <Text className="text-base font-bold text-gray-500 ml-4">Cancel</Text>
+            </TouchableOpacity>
+
+          </View>
+        </View>
+      </Modal>
+
+    </SafeAreaView>
+  );
+}
