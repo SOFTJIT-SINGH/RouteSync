@@ -42,7 +42,7 @@ export default function HomeScreen({ navigation }: any) {
 
         {/* Quick Actions – HeroButtons */}
         <View className="mb-8">
-          <HeroButtons navigation={navigation} />
+          <HeroButtons />
         </View>
 
         {/* Active Syncs – Section */}

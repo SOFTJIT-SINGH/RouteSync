@@ -1,7 +1,7 @@
-// navigation/RootNavigator.tsx
 import React, { useState, useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { supabase } from '../lib/supabase';
+
 import AuthStack from './AuthStack';
 import MainStack from './MainStack';
 
@@ -15,20 +15,21 @@ export default function RootNavigator() {
       setLoading(false);
     });
 
-    supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
-  }, []);
 
-  
+    return () => subscription.unsubscribe();
+  }, []);
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FAFAFA' }}>
         <ActivityIndicator size="large" color="#30AF5B" />
       </View>
     );
   }
 
+  // Notice: No <NavigationContainer> here anymore! Just the pure stacks.
   return session ? <MainStack /> : <AuthStack />;
 }
