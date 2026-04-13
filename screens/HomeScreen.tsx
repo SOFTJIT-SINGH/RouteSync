@@ -1,7 +1,9 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { supabase } from '../lib/supabase';
 
 // COMPONENTS
 import Navbar from '../components/Navbar';
@@ -11,6 +13,35 @@ import BuddyMatch from '../components/BuddyMatch';
 import AddItinerary from '../components/AddItinerary';
 
 export default function HomeScreen({ navigation }: any) {
+  const [displayName, setDisplayName] = useState('Traveler');
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchGreeting = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase.from('profiles').select('first_name, full_name').eq('id', user.id).maybeSingle();
+        if (data) {
+          setDisplayName(data.first_name || data.full_name?.split(' ')[0] || 'Traveler');
+        }
+      }
+    } catch (e) {
+      console.warn('Greeting fetch error:', e);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchGreeting();
+    }, [])
+  );
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchGreeting();
+    setRefreshing(false);
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-hi-bg" edges={['top']}>
       {/* Navbar */}
@@ -22,13 +53,16 @@ export default function HomeScreen({ navigation }: any) {
         className="flex-1 px-5"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 40 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#30AF5B" />
+        }
       >
         {/* Welcome Card */}
         <View className="mt-4 mb-6 bg-white rounded-3xl p-5 shadow-sm shadow-gray-200 border border-hi-gray-10">
           <View className="flex-row items-center justify-between">
             <View className="flex-1">
               <Text className="text-2xl font-black tracking-tight text-hi-dark">
-                Hello, Traveler! 👋
+                Hello, {displayName}! 👋
               </Text>
               <Text className="mt-1 text-sm font-medium text-hi-gray-30">
                 Ready to explore new places?

@@ -135,13 +135,15 @@ export default function ProfileScreen({ navigation }: any) {
             </View>
             <View className="w-px h-10 bg-hi-gray-10" />
             <View className="items-center flex-1">
-              <Text className="text-2xl font-black text-hi-dark">12</Text>
-              <Text className="text-xs font-bold text-hi-gray-20 mt-1 uppercase tracking-wider">Countries</Text>
+              <Text className="text-2xl font-black text-hi-dark">
+                {[...new Set(myTrips.map(t => t.destination).filter(Boolean))].length}
+              </Text>
+              <Text className="text-xs font-bold text-hi-gray-20 mt-1 uppercase tracking-wider">Places</Text>
             </View>
             <View className="w-px h-10 bg-hi-gray-10" />
             <View className="items-center flex-1">
-              <Text className="text-2xl font-black text-hi-dark">84</Text>
-              <Text className="text-xs font-bold text-hi-gray-20 mt-1 uppercase tracking-wider">Buddies</Text>
+              <Text className="text-2xl font-black text-hi-dark">{profile?.travel_style ? '1' : '0'}</Text>
+              <Text className="text-xs font-bold text-hi-gray-20 mt-1 uppercase tracking-wider">Vibes</Text>
             </View>
           </View>
 
@@ -184,7 +186,10 @@ export default function ProfileScreen({ navigation }: any) {
           <View className="mb-10">
             <Text className="text-xl font-bold text-hi-dark tracking-tight mb-4">Travel Vibe</Text>
             <View className="flex-row flex-wrap gap-2">
-              {['📸 Photography', '🏔️ Mountains', '🍕 Foodie', '🏕️ Camping', '🏍️ Road Trips'].map((interest, i) => (
+              {(profile?.travel_style
+                ? [profile.travel_style, ...(profile?.bio ? ['✈️ Explorer'] : [])]
+                : ['📸 Photography', '🏔️ Mountains', '🍕 Foodie', '🏕️ Camping', '🏍️ Road Trips']
+              ).map((interest: string, i: number) => (
                 <View key={i} className="bg-white px-4 py-2.5 rounded-full border border-hi-gray-10 shadow-sm shadow-gray-50">
                   <Text className="text-sm font-semibold text-hi-gray-50 px-1">{interest}</Text>
                 </View>

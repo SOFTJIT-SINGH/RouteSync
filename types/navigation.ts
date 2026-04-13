@@ -1,10 +1,28 @@
 // types/navigation.ts
 
 export type RootStackParamList = {
-  HomeDashboard: undefined; // undefined means this screen doesn't require any params/data
-  Chat: undefined;
+  // Auth Stack
+  Login: undefined;
+  Signup: undefined;
+  OTP: { email: string };
+
+  // Main Tabs
+  Home: undefined;
+  Matches: undefined;
+  Community: undefined;
   Profile: undefined;
-  
-  // Example for the future when you need to pass data:
-  // TripDetails: { tripId: string; destination: string };
+
+  // Stack Screens
+  RootTabs: undefined;
+  Chat: { buddyId?: string; tripId?: string };
+  UserProfile: { userId?: string; profile?: any };
+  CreateTrip: undefined;
+  EditProfile: undefined;
+  Notifications: undefined;
+  Settings: undefined;
+
+  // Drawer
+  MainApp: undefined;
+  SavedTrips: undefined;
+  DrawerSettings: undefined;
 };

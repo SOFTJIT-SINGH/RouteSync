@@ -5,6 +5,7 @@ import {
   Animated
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { Ionicons, Feather, FontAwesome6 } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import Navbar from '../components/Navbar';
@@ -50,6 +51,7 @@ const INITIAL_FEED = [
 ];
 
 export default function SocialScreen() {
+  const navigation = useNavigation<any>();
   const [posts, setPosts] = useState<any[]>(INITIAL_FEED);
   const [userId, setUserId] = useState<string | null>(null);
   

@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '../lib/supabase';
 
 export default function EditProfileScreen({ navigation }: any) {
@@ -133,7 +134,25 @@ export default function EditProfileScreen({ navigation }: any) {
                 source={{ uri: avatarUrl }} 
                 className="w-28 h-28 rounded-full bg-gray-200 border-4 border-white shadow-sm shadow-gray-200"
               />
-              <TouchableOpacity className="absolute bottom-0 right-0 bg-hi-green w-10 h-10 rounded-full items-center justify-center border-4 border-hi-bg shadow-sm">
+              <TouchableOpacity
+                onPress={async () => {
+                  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                  if (status !== 'granted') {
+                    Alert.alert('Permission Denied', 'We need camera roll permissions to change your photo.');
+                    return;
+                  }
+                  const result = await ImagePicker.launchImageLibraryAsync({
+                    mediaTypes: ['images'],
+                    allowsEditing: true,
+                    aspect: [1, 1],
+                    quality: 0.8,
+                  });
+                  if (!result.canceled && result.assets?.[0]?.uri) {
+                    setAvatarUrl(result.assets[0].uri);
+                  }
+                }}
+                className="absolute bottom-0 right-0 bg-hi-green w-10 h-10 rounded-full items-center justify-center border-4 border-hi-bg shadow-sm"
+              >
                 <Feather name="camera" size={16} color="white" />
               </TouchableOpacity>
             </View>

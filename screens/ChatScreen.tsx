@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
   View, Text, TouchableOpacity, Image, TextInput, 
   FlatList, KeyboardAvoidingView, Platform, StatusBar,
@@ -7,6 +7,11 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
+
+// Generate a unique ID without requiring crypto.randomUUID (which isn't available in all RN environments)
+const generateId = () => {
+  return 'msg_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 10);
+};
 
 // Mock conversation fallback if DB isn't ready
 const INITIAL_MESSAGES = [
@@ -28,25 +33,22 @@ export default function ChatScreen({ navigation, route }: any) {
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop'
   });
   const flatListRef = useRef<FlatList>(null);
+  const channelRef = useRef<any>(null);
   
   // Create a unique, symmetric room ID between the two users
   const buddyId = route?.params?.buddyId;
-  const [chatRoomId, setChatRoomId] = useState<string>('default-room');
 
   useEffect(() => {
-    let channel: any;
-
     const setupChat = async () => {
       // 1. Get current user
       const { data: { user } } = await supabase.auth.getUser();
       const currentUserId = user?.id;
       if (currentUserId) setUserId(currentUserId);
 
-      // Generate symmetric chat room ID
-      if (currentUserId && buddyId) {
-        const generatedRoomId = [currentUserId, buddyId].sort().join('_');
-        setChatRoomId(generatedRoomId);
-      }
+      // Generate symmetric chat room ID synchronously
+      const roomId = (currentUserId && buddyId)
+        ? [currentUserId, buddyId].sort().join('_')
+        : 'default-room';
 
       // Fetch Buddy Profile
       if (buddyId) {
@@ -68,14 +70,14 @@ export default function ChatScreen({ navigation, route }: any) {
         const { data, error } = await supabase
           .from('messages')
           .select('*')
-          .eq('room_id', chatRoomId)
+          .eq('room_id', roomId)
           .order('created_at', { ascending: true });
           
         if (!error && data && data.length > 0) {
           const formatted = data.map(m => ({
             id: m.id,
             text: m.text,
-            sender: m.sender_id === user?.id ? 'me' : 'them',
+            sender: m.sender_id === currentUserId ? 'me' : 'them',
             time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           }));
           setMessages(formatted);
@@ -85,16 +87,17 @@ export default function ChatScreen({ navigation, route }: any) {
       }
 
       // 3. Subscribe to Real-time Changes & Presence & Broadcast (Typing indicator)
-      channel = supabase.channel(`chat:${chatRoomId}`);
+      const channel = supabase.channel(`chat:${roomId}`);
+      channelRef.current = channel;
 
       channel
         .on(
           'postgres_changes', 
-          { event: 'INSERT', schema: 'public', table: 'messages', filter: `room_id=eq.${chatRoomId}` }, 
+          { event: 'INSERT', schema: 'public', table: 'messages', filter: `room_id=eq.${roomId}` }, 
           (payload: any) => {
             const newMsg = payload.new;
             // Ignore if we sent it (we add locally instantly for optimistic UI)
-            if (newMsg.sender_id === user?.id) return;
+            if (newMsg.sender_id === currentUserId) return;
             
             setMessages(prev => [...prev, {
               id: newMsg.id,
@@ -109,7 +112,7 @@ export default function ChatScreen({ navigation, route }: any) {
           'broadcast',
           { event: 'typing' },
           (payload: any) => {
-            if (payload.payload.userId !== user?.id) {
+            if (payload.payload.userId !== currentUserId) {
               setIsTyping(payload.payload.isTyping);
             }
           }
@@ -126,7 +129,7 @@ export default function ChatScreen({ navigation, route }: any) {
         )
         .subscribe(async (status: string) => {
           if (status === 'SUBSCRIBED') {
-            await channel.track({ online_at: new Date().toISOString(), user_id: user?.id });
+            await channel.track({ online_at: new Date().toISOString(), user_id: currentUserId });
           }
         });
     };
@@ -134,19 +137,24 @@ export default function ChatScreen({ navigation, route }: any) {
     setupChat();
 
     return () => {
-      if (channel) supabase.removeChannel(channel);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
-  }, [chatRoomId]);
+  }, [buddyId]);
 
-  // Handle typing indicator broadcast
+  // Handle typing indicator broadcast — reuses the existing channel via ref
   useEffect(() => {
-    const channel = supabase.channel(`chat:${chatRoomId}`);
+    const channel = channelRef.current;
+    if (!channel || !userId) return;
+
     const typingTimeout = setTimeout(() => {
       channel.send({
         type: 'broadcast',
         event: 'typing',
         payload: { userId, isTyping: false },
-      });
+      }).catch(() => {});
     }, 1500);
 
     if (inputText.length > 0) {
@@ -154,17 +162,22 @@ export default function ChatScreen({ navigation, route }: any) {
         type: 'broadcast',
         event: 'typing',
         payload: { userId, isTyping: true },
-      });
+      }).catch(() => {});
     }
 
     return () => clearTimeout(typingTimeout);
-  }, [inputText]);
+  }, [inputText, userId]);
 
   const sendMessage = async () => {
     if (inputText.trim().length === 0) return;
     
     const messageText = inputText;
-    const optimisticId = Date.now().toString();
+    const optimisticId = generateId();
+    
+    // Compute room ID for the insert
+    const roomId = (userId && buddyId)
+      ? [userId, buddyId].sort().join('_')
+      : 'default-room';
     
     // Optimistic insert
     const newMessage = {
@@ -184,12 +197,15 @@ export default function ChatScreen({ navigation, route }: any) {
 
     // Save to DB
     if (userId) {
-      await supabase.from('messages').insert({
-        id: optimisticId, // We can reuse the optimistic ID
-        room_id: chatRoomId,
-        sender_id: userId,
-        text: messageText
-      });
+      try {
+        await supabase.from('messages').insert({
+          room_id: roomId,
+          sender_id: userId,
+          text: messageText
+        });
+      } catch (e) {
+        console.warn('Message save failed:', e);
+      }
     }
   };
 

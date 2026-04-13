@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Modal, ScrollView, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-export default function FilterModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+export default function FilterModal({ visible, onClose, onApply }: { visible: boolean; onClose: () => void; onApply?: (filters: { vibe: string; budget: string; minBudget: string; maxBudget: string }) => void }) {
   const [selectedVibe, setSelectedVibe] = useState('Any');
   const [selectedBudget, setSelectedBudget] = useState('Medium');
   const [minBudget, setMinBudget] = useState('');
@@ -103,7 +103,12 @@ export default function FilterModal({ visible, onClose }: { visible: boolean; on
             {/* Apply Button */}
             <View className="pt-4">
               <TouchableOpacity
-                onPress={onClose}
+                onPress={() => {
+                  if (onApply) {
+                    onApply({ vibe: selectedVibe, budget: selectedBudget, minBudget, maxBudget });
+                  }
+                  onClose();
+                }}
                 className="bg-hi-green py-4 rounded-full items-center shadow-lg shadow-green-900/20"
               >
                 <Text className="text-white font-black text-lg tracking-wide">Apply Filters</Text>

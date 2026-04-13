@@ -211,7 +211,7 @@ export default function AppNavigator() {
         }}
       />
       <Drawer.Screen
-        name="Settings"
+        name="DrawerSettings"
         component={SettingsScreen}
         options={{
           title: 'Settings',

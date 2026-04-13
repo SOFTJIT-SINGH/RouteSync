@@ -3,6 +3,7 @@
     "name": "RouteSync",
     "slug": "RouteSync",
     "version": "1.0.0",
+    "scheme": "routesync",
     "web": {
       "favicon": "./assets/logo.png"
     },
@@ -24,9 +25,11 @@
       "assets/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.routesync.app"
     },
     "android": {
+      "package": "com.routesync.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#ffffff"

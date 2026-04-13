@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Switch, Alert, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 
 const SettingRow = ({ icon, label, value, onPress, isSwitch, switchValue, onToggle }: any) => (
@@ -34,6 +35,31 @@ const SettingRow = ({ icon, label, value, onPress, isSwitch, switchValue, onTogg
 export default function SettingsScreen({ navigation }: any) {
   const [pushNotifs, setPushNotifs] = useState(true);
   const [locationSharing, setLocationSharing] = useState(false);
+
+  // Load persisted settings
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const storedPush = await AsyncStorage.getItem('settings_push_notifs');
+        const storedLocation = await AsyncStorage.getItem('settings_location_sharing');
+        if (storedPush !== null) setPushNotifs(storedPush === 'true');
+        if (storedLocation !== null) setLocationSharing(storedLocation === 'true');
+      } catch (e) {
+        console.warn('Error loading settings:', e);
+      }
+    };
+    loadSettings();
+  }, []);
+
+  const togglePushNotifs = async (value: boolean) => {
+    setPushNotifs(value);
+    await AsyncStorage.setItem('settings_push_notifs', String(value));
+  };
+
+  const toggleLocationSharing = async (value: boolean) => {
+    setLocationSharing(value);
+    await AsyncStorage.setItem('settings_location_sharing', String(value));
+  };
 
   const handleLogout = () => {
     Alert.alert("Sign Out", "Are you sure you want to log out?", [
@@ -83,9 +109,9 @@ export default function SettingsScreen({ navigation }: any) {
         {/* Preferences */}
         <Text className="text-hi-gray-20 font-bold uppercase text-[10px] tracking-widest mb-2 ml-1">Preferences</Text>
         <View className="bg-white rounded-3xl border border-hi-gray-10 px-4 mb-6">
-          <SettingRow icon="bell" label="Push Notifications" isSwitch switchValue={pushNotifs} onToggle={setPushNotifs} />
+          <SettingRow icon="bell" label="Push Notifications" isSwitch switchValue={pushNotifs} onToggle={togglePushNotifs} />
           <View className="h-px bg-hi-gray-10" />
-          <SettingRow icon="map-pin" label="Location Sharing" isSwitch switchValue={locationSharing} onToggle={setLocationSharing} />
+          <SettingRow icon="map-pin" label="Location Sharing" isSwitch switchValue={locationSharing} onToggle={toggleLocationSharing} />
           <View className="h-px bg-hi-gray-10" />
           <SettingRow icon="globe" label="Language" value="English" />
         </View>

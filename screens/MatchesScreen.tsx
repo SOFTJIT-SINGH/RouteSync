@@ -17,6 +17,7 @@ export default function MatchesScreen({ navigation }: any) {
   const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<{ vibe?: string; budget?: string; minBudget?: string; maxBudget?: string }>({});
 
   const tabs = ['All Matches', 'Same Dates', 'High Compatibility', 'Nearby'];
 
@@ -90,11 +91,27 @@ export default function MatchesScreen({ navigation }: any) {
   }, [matches]);
 
   const filteredMatches = matches.filter(match => {
-    if (!searchQuery) return true;
-    const dest = match.destination?.toLowerCase() || '';
-    const name = match.profiles?.full_name?.toLowerCase() || match.profiles?.first_name?.toLowerCase() || '';
-    const query = searchQuery.toLowerCase();
-    return dest.includes(query) || name.includes(query);
+    // Text search filter
+    if (searchQuery) {
+      const dest = match.destination?.toLowerCase() || '';
+      const name = match.profiles?.full_name?.toLowerCase() || match.profiles?.first_name?.toLowerCase() || '';
+      const query = searchQuery.toLowerCase();
+      if (!dest.includes(query) && !name.includes(query)) return false;
+    }
+    // Vibe filter
+    if (activeFilters.vibe && activeFilters.vibe !== 'Any') {
+      if (match.vibe?.toLowerCase() !== activeFilters.vibe.toLowerCase()) return false;
+    }
+    // Budget range filter
+    if (activeFilters.minBudget) {
+      const min = parseFloat(activeFilters.minBudget);
+      if (!isNaN(min) && (match.budget == null || match.budget < min)) return false;
+    }
+    if (activeFilters.maxBudget) {
+      const max = parseFloat(activeFilters.maxBudget);
+      if (!isNaN(max) && (match.budget == null || match.budget > max)) return false;
+    }
+    return true;
   });
 
   return (
@@ -248,7 +265,10 @@ export default function MatchesScreen({ navigation }: any) {
                               </Text>
                             </View>
 
-                            <TouchableOpacity className="bg-hi-dark px-5 py-2.5 rounded-full">
+                            <TouchableOpacity
+                              onPress={() => navigation.navigate('Chat', { buddyId: match.user_id, tripId: match.id })}
+                              className="bg-hi-dark px-5 py-2.5 rounded-full"
+                            >
                               <Text className="text-white font-black text-xs">Say Hi</Text>
                             </TouchableOpacity>
                           </View>
@@ -263,7 +283,11 @@ export default function MatchesScreen({ navigation }: any) {
         </View>
       </ScrollView>
 
-      <FilterModal visible={filterVisible} onClose={() => setFilterVisible(false)} />
+      <FilterModal
+        visible={filterVisible}
+        onClose={() => setFilterVisible(false)}
+        onApply={(filters) => setActiveFilters(filters)}
+      />
     </SafeAreaView>
   );
 }
