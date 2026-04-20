@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, FlatList, Image, TouchableOpacity, StatusBar,
   Share, Modal, TextInput, KeyboardAvoidingView, Platform,
-  Alert, ActivityIndicator, RefreshControl
+  Alert, ActivityIndicator, RefreshControl, ScrollView
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -68,7 +68,47 @@ const getTimeAgo = (dateStr: string): string => {
 
 export default function SocialScreen() {
   const navigation = useNavigation<any>();
+  const [shareModalVisible, setShareModalVisible] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<any>(null);
+  const [buddies, setBuddies] = useState<any[]>([]);
   const [posts, setPosts] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchBuddies();
+  }, []);
+
+  const fetchBuddies = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .neq('id', user.id)
+        .limit(10);
+      setBuddies(data || []);
+    } catch (e) {}
+  };
+
+  const sendPostToBuddy = async (buddyId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user || !selectedPost) return;
+
+      const { error } = await supabase.from('messages').insert({
+        sender_id: user.id,
+        receiver_id: buddyId,
+        content: `shared_post:${selectedPost.id}`,
+        room_id: user.id < buddyId ? `${user.id}_${buddyId}` : `${buddyId}_${user.id}`,
+      });
+
+      if (error) throw error;
+      setShareModalVisible(false);
+      Alert.alert('Sent!', 'Your travel story has been shared.');
+    } catch (e: any) {
+      Alert.alert('Error', e.message);
+    }
+  };
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -99,16 +139,17 @@ export default function SocialScreen() {
       if (error) throw error;
 
       if (data && data.length > 0) {
-        // Check which posts the user liked
+        // Check which posts the user liked and saved
         let likedPostIds: Set<string> = new Set();
+        let savedPostIds: Set<string> = new Set();
         if (user) {
-          const { data: likes } = await supabase
-            .from('post_likes')
-            .select('post_id')
-            .eq('user_id', user.id);
-          if (likes) {
-            likedPostIds = new Set(likes.map((l: any) => l.post_id));
-          }
+          const [{ data: likes }, { data: saves }] = await Promise.all([
+            supabase.from('post_likes').select('post_id').eq('user_id', user.id),
+            supabase.from('post_bookmarks').select('post_id').eq('user_id', user.id)
+          ]);
+          
+          if (likes) likedPostIds = new Set(likes.map((l: any) => l.post_id));
+          if (saves) savedPostIds = new Set(saves.map((s: any) => s.post_id));
         }
 
         const formatted = data.map(dbPost => ({
@@ -125,7 +166,7 @@ export default function SocialScreen() {
           comments: dbPost.comments_count || 0,
           time: getTimeAgo(dbPost.created_at),
           isLiked: likedPostIds.has(dbPost.id),
-          isSaved: false,
+          isSaved: savedPostIds.has(dbPost.id),
           isOwner: dbPost.user_id === user?.id,
         }));
         setPosts(formatted);
@@ -174,19 +215,40 @@ export default function SocialScreen() {
   // --- POST CREATION ---
 
   const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission Required', 'We need camera roll access to share photos.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
-    if (!result.canceled && result.assets?.[0]?.uri) {
-      setNewImageUri(result.assets[0].uri);
+    Alert.alert('Add Photo', 'Capture or select a travel memory', [
+      { text: 'Take Photo', onPress: () => openImagePicker(true) },
+      { text: 'Choose from Gallery', onPress: () => openImagePicker(false) },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
+
+  const openImagePicker = async (isCamera: boolean) => {
+    try {
+      const { status } = isCamera 
+        ? await ImagePicker.requestCameraPermissionsAsync()
+        : await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', `We need ${isCamera ? 'camera' : 'gallery'} access to share photos.`);
+        return;
+      }
+
+      const options: ImagePicker.ImagePickerOptions = {
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      };
+
+      const result = isCamera 
+        ? await ImagePicker.launchCameraAsync(options)
+        : await ImagePicker.launchImageLibraryAsync(options);
+
+      if (!result.canceled && result.assets?.[0]?.uri) {
+        setNewImageUri(result.assets[0].uri);
+      }
+    } catch (e: any) {
+      Alert.alert('Error', 'Failed to open image picker');
     }
   };
 
@@ -244,14 +306,16 @@ export default function SocialScreen() {
       const { error } = await supabase.from('posts').insert({
         user_id: userId,
         caption: newCaption.trim(),
-        content: newCaption.trim() || ' ', // Fills required legacy 'content' field
         image_url: imageUrl,
         location: newLocation.trim() || null,
         likes: 0,
         comments_count: 0,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database Error:', error);
+        throw new Error(error.message);
+      }
 
       setShowCreatePost(false);
       setNewCaption('');
@@ -308,9 +372,30 @@ export default function SocialScreen() {
     }
   };
 
-  const handleBookmark = (postId: string) => {
+  const handleBookmark = async (postId: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // UI update
     setPosts(prev => prev.map(p => p.id === postId ? { ...p, isSaved: !p.isSaved } : p));
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: existing } = await supabase
+        .from('post_bookmarks')
+        .select('*')
+        .eq('post_id', postId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase.from('post_bookmarks').delete().eq('id', existing.id);
+      } else {
+        await supabase.from('post_bookmarks').insert({ post_id: postId, user_id: user.id });
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleShare = async (post: any) => {
@@ -477,14 +562,20 @@ export default function SocialScreen() {
             <Text className="ml-1.5 text-sm font-bold text-gray-900">{item.comments}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => handleShare(item)} className="flex-row items-center ml-5 active:scale-95">
+          <TouchableOpacity 
+            onPress={() => {
+               setSelectedPost(item);
+               setShareModalVisible(true);
+            }} 
+            className="flex-row items-center ml-5 active:scale-95"
+          >
             <Feather name="send" size={24} color="#1F2937" style={{ marginTop: -2 }} />
           </TouchableOpacity>
         </View>
 
         <TouchableOpacity onPress={() => handleBookmark(item.id)} className="active:scale-95">
           {item.isSaved ? (
-            <Ionicons name="bookmark" size={26} color="#1F2937" />
+            <Ionicons name="bookmark" size={26} color="#30AF5B" />
           ) : (
             <Feather name="bookmark" size={26} color="#1F2937" />
           )}
@@ -713,6 +804,46 @@ export default function SocialScreen() {
               </View>
             </View>
           </KeyboardAvoidingView>
+        </View>
+      </Modal>
+
+      {/* Share to Buddy Modal */}
+      <Modal visible={shareModalVisible} transparent animationType="slide">
+        <View className="flex-1 justify-end bg-black/50">
+          <TouchableOpacity className="flex-1" onPress={() => setShareModalVisible(false)} />
+          <View className="bg-white rounded-t-[40px] p-6 pb-12">
+             <View className="w-12 h-1.5 bg-hi-gray-10 rounded-full self-center mb-6" />
+             <Text className="text-xl font-black text-hi-dark mb-6 text-center italic">Send to Buddy</Text>
+             
+             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-6">
+                <View className="flex-row" style={{ gap: 16 }}>
+                   {buddies.map((buddy) => (
+                      <TouchableOpacity 
+                        key={buddy.id} 
+                        onPress={() => sendPostToBuddy(buddy.id)}
+                        className="items-center"
+                      >
+                         <Image source={{ uri: buddy.avatar_url || 'https://i.pravatar.cc/150' }} className="w-16 h-16 rounded-full border-2 border-hi-bg" />
+                         <Text className="text-[10px] font-bold text-hi-dark mt-2">@{buddy.username || 'Traveler'}</Text>
+                      </TouchableOpacity>
+                   ))}
+                </View>
+             </ScrollView>
+
+             <TouchableOpacity 
+               onPress={() => {
+                 setShareModalVisible(false);
+                 handleShare(selectedPost);
+               }}
+               className="bg-hi-bg p-5 rounded-2xl flex-row items-center justify-between border border-hi-gray-10"
+             >
+                <View className="flex-row items-center">
+                   <Ionicons name="share-outline" size={20} color="#292C27" />
+                   <Text className="text-sm font-bold text-hi-dark ml-3">External Share</Text>
+                </View>
+                <Feather name="chevron-right" size={18} color="#A2A2A2" />
+             </TouchableOpacity>
+          </View>
         </View>
       </Modal>
     </SafeAreaView>

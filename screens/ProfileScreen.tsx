@@ -9,6 +9,7 @@ export default function ProfileScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
   const [profile, setProfile] = useState<any>(null);
   const [myTrips, setMyTrips] = useState<any[]>([]);
+  const [myPosts, setMyPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useFocusEffect(
@@ -40,6 +41,23 @@ export default function ProfileScreen({ navigation }: any) {
       if (tripError) throw tripError;
       setMyTrips(tripData || []);
 
+      // Fetch Follow Counts
+      const [{ count: fers }, { count: fing }] = await Promise.all([
+        supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', user.id),
+        supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', user.id)
+      ]);
+
+      const { data: postData, error: postError } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (postError) throw postError;
+      setMyPosts(postData || []);
+
+      setProfile({ ...profileData, email: user.email, followersCount: fers || 0, followingCount: fing || 0 });
+
     } catch (error: any) {
       console.error('Error fetching profile:', error.message);
     } finally {
@@ -68,10 +86,11 @@ export default function ProfileScreen({ navigation }: any) {
     );
   }
 
-  const displayName = profile?.full_name || profile?.first_name || 'Soft';
-  const username = profile?.username || displayName.toLowerCase().replace(/\s/g, '') + '_travels';
+  const displayName = profile?.full_name || profile?.first_name || 'Traveler';
+  const username = profile?.username || `user_${profile?.id?.substring(0,8) || 'unknown'}`;
   const avatarUrl = profile?.avatar_url || 'https://i.pravatar.cc/150';
-  const bio = profile?.bio || 'Exploring the world, one city at a time. Always down for an adventure!';
+  const bio = profile?.bio || 'No bio yet. Start your journey on RouteSync!';
+  const coverUrl = 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1000&auto=format&fit=crop';
 
   return (
     <SafeAreaView className="flex-1 bg-hi-bg">
@@ -81,7 +100,7 @@ export default function ProfileScreen({ navigation }: any) {
         
         <View className="relative">
           <Image 
-            source={{ uri: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1000&auto=format&fit=crop' }} 
+            source={{ uri: profile?.cover_url || coverUrl }} 
             className="w-full h-56 bg-hi-dark"
             resizeMode="cover"
           />
@@ -107,16 +126,34 @@ export default function ProfileScreen({ navigation }: any) {
         {/* 2. Profile Info (Overlapping Card) */}
         <View className="bg-hi-bg rounded-t-4xl -mt-8 px-6 pt-0 pb-6 border-t border-white shadow-sm shadow-gray-200">
           <View className="flex-row justify-between items-end -mt-12 mb-4">
-            <Image 
-              source={{ uri: avatarUrl }} 
-              className="w-24 h-24 rounded-full border-4 border-hi-bg bg-hi-gray-10"
-            />
-            <TouchableOpacity 
-              onPress={() => navigation.navigate('EditProfile')}
-              className="bg-hi-dark px-5 py-2.5 rounded-full mb-2 shadow-sm shadow-gray-900/20"
-            >
-              <Text className="text-white font-bold text-sm">Edit Profile</Text>
-            </TouchableOpacity>
+            <View className="relative">
+              <Image 
+                source={{ uri: avatarUrl }} 
+                className="w-24 h-24 rounded-full border-4 border-hi-bg bg-hi-gray-10"
+              />
+              <View className="absolute bottom-1 right-1 w-5 h-5 bg-hi-green border-2 border-white rounded-full" />
+            </View>
+
+            <View className="flex-row items-center mb-2" style={{ gap: 12 }}>
+               <TouchableOpacity 
+                 onPress={() => navigation.navigate('LikedPosts')}
+                 className="w-10 h-10 bg-hi-bg rounded-full items-center justify-center border border-hi-gray-10 shadow-sm"
+               >
+                  <Ionicons name="heart" size={20} color="#EF4444" />
+               </TouchableOpacity>
+               <TouchableOpacity 
+                 onPress={() => navigation.navigate('SavedPosts')}
+                 className="w-10 h-10 bg-hi-bg rounded-full items-center justify-center border border-hi-gray-10 shadow-sm"
+               >
+                  <Ionicons name="bookmark" size={20} color="#30AF5B" />
+               </TouchableOpacity>
+               <TouchableOpacity 
+                 onPress={() => navigation.navigate('EditProfile')}
+                 className="bg-hi-dark px-5 py-2.5 rounded-full shadow-sm shadow-gray-900/20"
+               >
+                 <Text className="text-white font-bold text-sm">Edit</Text>
+               </TouchableOpacity>
+            </View>
           </View>
 
           <View className="mb-6">
@@ -127,30 +164,94 @@ export default function ProfileScreen({ navigation }: any) {
             </Text>
           </View>
 
-          {/* 3. Stats Dashboard */}
+          {/* 3. Wanderlust Metrics (New Data Component) */}
           <View className="flex-row items-center justify-between bg-white p-5 rounded-3xl border border-hi-gray-10 shadow-sm shadow-gray-100 mb-8">
-            <View className="items-center flex-1">
-              <Text className="text-2xl font-black text-hi-dark">{myTrips.length}</Text>
-              <Text className="text-xs font-bold text-hi-gray-20 mt-1 uppercase tracking-wider">Trips</Text>
-            </View>
+            <TouchableOpacity 
+              onPress={() => navigation.navigate('Connections', { userId: profile.id, initialTab: 'Followers' })}
+              className="items-center flex-1"
+            >
+              <Text className="text-xl font-black text-hi-dark">{myPosts.length}</Text>
+              <Text className="text-[10px] font-bold text-hi-gray-20 mt-1 uppercase tracking-wider">Posts</Text>
+            </TouchableOpacity>
             <View className="w-px h-10 bg-hi-gray-10" />
-            <View className="items-center flex-1">
-              <Text className="text-2xl font-black text-hi-dark">
-                {[...new Set(myTrips.map(t => t.destination).filter(Boolean))].length}
-              </Text>
-              <Text className="text-xs font-bold text-hi-gray-20 mt-1 uppercase tracking-wider">Places</Text>
-            </View>
+            <TouchableOpacity 
+              onPress={() => navigation.navigate('Connections', { userId: profile.id, initialTab: 'Followers' })}
+              className="items-center flex-1"
+            >
+              <Text className="text-xl font-black text-hi-dark">{profile?.followersCount || 0}</Text>
+              <Text className="text-[10px] font-bold text-hi-gray-20 mt-1 uppercase tracking-wider">Followers</Text>
+            </TouchableOpacity>
             <View className="w-px h-10 bg-hi-gray-10" />
-            <View className="items-center flex-1">
-              <Text className="text-2xl font-black text-hi-dark">{profile?.travel_style ? '1' : '0'}</Text>
-              <Text className="text-xs font-bold text-hi-gray-20 mt-1 uppercase tracking-wider">Vibes</Text>
-            </View>
+            <TouchableOpacity 
+              onPress={() => navigation.navigate('Connections', { userId: profile.id, initialTab: 'Following' })}
+              className="items-center flex-1"
+            >
+              <Text className="text-xl font-black text-hi-dark">{profile?.followingCount || 0}</Text>
+              <Text className="text-[10px] font-bold text-hi-gray-20 mt-1 uppercase tracking-wider">Following</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* 3.5 Dynamic Traveler Analytics (REAL DATA) */}
+          <View className="mb-10">
+             <Text className="text-xl font-bold text-hi-dark tracking-tight mb-4">Traveler Analytics</Text>
+             <View className="flex-row gap-3">
+                <View className="flex-1 bg-hi-green/5 p-4 rounded-[28px] border border-hi-green/10">
+                   <Text className="text-lg font-black text-hi-green">
+                     {myTrips.reduce((acc, trip) => acc + (trip.destination?.length || 0) * 85, 0) || 0}km
+                   </Text>
+                   <Text className="text-[10px] font-black text-hi-gray-30 uppercase tracking-widest mt-1">Distance</Text>
+                </View>
+                <View className="flex-1 bg-hi-bg/50 p-4 rounded-[28px] border border-hi-gray-10">
+                   <Text className="text-lg font-black text-hi-dark">
+                     {[...new Set(myTrips.map(t => t.destination).filter(Boolean))].length}
+                   </Text>
+                   <Text className="text-[10px] font-black text-hi-gray-30 uppercase tracking-widest mt-1">Regions</Text>
+                </View>
+                <View className="flex-1 bg-hi-orange/5 p-4 rounded-[28px] border border-hi-orange/10">
+                   <Text className="text-lg font-black text-hi-orange">
+                     {myPosts.length > 10 ? 'Elite' : myPosts.length > 3 ? 'Expert' : 'Rookie'}
+                   </Text>
+                   <Text className="text-[10px] font-black text-hi-gray-30 uppercase tracking-widest mt-1">Status</Text>
+                </View>
+             </View>
+          </View>
+
+          {/* 3.6 Conditional Achievements (DYNAMIC) */}
+          <View className="mb-10">
+             <View className="flex-row justify-between items-center mb-4">
+               <Text className="text-xl font-bold text-hi-dark tracking-tight">Achievements</Text>
+               <View className="bg-hi-bg px-3 py-1 rounded-full">
+                  <Text className="text-[10px] font-black text-hi-gray-30 uppercase">
+                    {[myPosts.length > 0, myTrips.length > 0, (profile?.followersCount || 0) > 0, !!profile?.bio, !!profile?.avatar_url, myPosts.length > 5].filter(Boolean).length} Earned
+                  </Text>
+               </View>
+             </View>
+             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -24 }} contentContainerStyle={{ paddingHorizontal: 24, gap: 12 }}>
+                {([
+                  myPosts.length > 0 && { icon: '🏆', label: 'Early Bird', color: '#FCD34D' },
+                  myPosts.length > 5 && { icon: '📸', label: 'Storyteller', color: '#60A5FA' },
+                  myTrips.length > 0 && { icon: '🏔️', label: 'Explorer', color: '#A78BFA' },
+                  (profile?.followersCount || 0) > 0 && { icon: '🔥', label: 'Rising Star', color: '#F87171' },
+                  !!profile?.bio && { icon: '📜', label: 'Author', color: '#34D399' },
+                  !!profile?.avatar_url && { icon: '🤳', label: 'Identified', color: '#FB923C' }
+                ].filter(Boolean) as any[]).map((badge, i) => (
+                  <View key={i} className="items-center">
+                    <View className="w-16 h-16 bg-white rounded-full items-center justify-center shadow-sm shadow-gray-100 border border-hi-gray-10 mb-2">
+                       <Text className="text-2xl">{badge.icon}</Text>
+                    </View>
+                    <Text className="text-[10px] font-bold text-hi-gray-30">{badge.label}</Text>
+                  </View>
+                ))}
+                {myPosts.length === 0 && myTrips.length === 0 && (
+                  <Text className="text-hi-gray-20 text-xs italic py-4">Start your first journey to earn badges!</Text>
+                )}
+             </ScrollView>
           </View>
 
           {/* 4. My Itineraries Section */}
-          <View className="mb-8">
+          <View className="mb-10">
             <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-xl font-bold text-hi-dark tracking-tight">My Itineraries</Text>
+              <Text className="text-xl font-bold text-hi-dark tracking-tight">Active Itineraries</Text>
               <TouchableOpacity onPress={() => navigation.navigate('CreateTrip')}>
                 <Text className="text-hi-green font-bold text-sm">+ New</Text>
               </TouchableOpacity>
@@ -166,7 +267,11 @@ export default function ProfileScreen({ navigation }: any) {
               </View>
             ) : (
               myTrips.map((trip) => (
-                <View key={trip.id} className="bg-white p-4 rounded-2xl mb-3 border border-hi-gray-10 shadow-sm shadow-gray-50 flex-row items-center">
+                <TouchableOpacity 
+                  key={trip.id} 
+                  onPress={() => navigation.navigate('TripDetail', { tripId: trip.id })}
+                  className="bg-white p-4 rounded-2xl mb-3 border border-hi-gray-10 shadow-sm shadow-gray-50 flex-row items-center"
+                >
                   <View className="bg-hi-bg w-12 h-12 rounded-xl items-center justify-center border border-hi-gray-10 mr-4">
                     <FontAwesome6 name="location-dot" size={18} color="#30AF5B" />
                   </View>
@@ -177,8 +282,43 @@ export default function ProfileScreen({ navigation }: any) {
                     </Text>
                   </View>
                   <Feather name="chevron-right" size={20} color="#EEEEEE" />
-                </View>
+                </TouchableOpacity>
               ))
+            )}
+          </View>
+
+          {/* 5. My Stories Section (Replaces Tabs) */}
+          <View className="mb-10">
+            <View className="flex-row justify-between items-center mb-6">
+              <Text className="text-2xl font-black text-hi-dark tracking-tighter italic">Travel Stories</Text>
+              <View className="h-0.5 flex-1 bg-hi-gray-10 mx-4 mt-1" />
+              <TouchableOpacity onPress={() => navigation.navigate('Community')}>
+                <Text className="text-hi-green font-bold text-xs uppercase tracking-widest">Feed</Text>
+              </TouchableOpacity>
+            </View>
+
+            {myPosts.length === 0 ? (
+              <View className="py-20 items-center justify-center">
+                <View className="bg-hi-bg/50 w-16 h-16 rounded-full items-center justify-center mb-4">
+                   <Ionicons name="camera-outline" size={24} color="#A2A2A2" />
+                </View>
+                <Text className="text-hi-gray-30 font-bold">No stories shared yet</Text>
+              </View>
+            ) : (
+              <View className="flex-row flex-wrap" style={{ marginHorizontal: -4 }}>
+                {myPosts.map((post) => (
+                  <TouchableOpacity 
+                    key={post.id} 
+                    onPress={() => navigation.navigate('EditPost', { post })}
+                    className="w-1/3 aspect-square p-1 rounded-2xl overflow-hidden"
+                  >
+                    <Image source={{ uri: post.image_url }} className="w-full h-full bg-hi-gray-10 rounded-2xl" />
+                    <View className="absolute bottom-2 right-2 bg-black/40 w-6 h-6 rounded-full items-center justify-center border border-white/20">
+                      <Feather name="edit-2" size={10} color="white" />
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
             )}
           </View>
 

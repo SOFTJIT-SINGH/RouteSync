@@ -80,11 +80,47 @@ export default function EditProfileScreen({ navigation }: any) {
     }
   };
 
+  const uploadImage = async (uri: string, userId: string): Promise<string | null> => {
+    try {
+      const fileExt = uri.split('.').pop()?.toLowerCase() || 'jpg';
+      const fileName = `${userId}/avatar_${Date.now()}.${fileExt}`;
+
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      const arrayBuffer = await new Response(blob).arrayBuffer();
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, arrayBuffer, {
+          contentType: `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`,
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      return urlData.publicUrl;
+    } catch (e) {
+      console.error('Upload failed:', e);
+      return null;
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No user logged in');
+
+      let finalAvatarUrl = avatarUrl;
+      // Only upload if it's a local file URI
+      if (avatarUrl.startsWith('file://')) {
+        const uploaded = await uploadImage(avatarUrl, user.id);
+        if (uploaded) finalAvatarUrl = uploaded;
+      }
 
       const computedFullName = `${firstName.trim()} ${lastName.trim()}`.trim();
 
@@ -100,7 +136,7 @@ export default function EditProfileScreen({ navigation }: any) {
         gender: gender,
         travel_style: travelStyle,
         age: age ? parseInt(age, 10) : null,
-        avatar_url: avatarUrl,
+        avatar_url: finalAvatarUrl,
         updated_at: new Date(),
       };
 
@@ -115,6 +151,29 @@ export default function EditProfileScreen({ navigation }: any) {
       Alert.alert("Error", error.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const openAvatarPicker = async (isCamera: boolean) => {
+    try {
+      const { status } = isCamera 
+        ? await ImagePicker.requestCameraPermissionsAsync()
+        : await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', `We need ${isCamera ? 'camera' : 'gallery'} access to change your photo.`);
+        return;
+      }
+
+      const result = isCamera 
+        ? await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.8 })
+        : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.8 });
+
+      if (!result.canceled && result.assets?.[0]?.uri) {
+        setAvatarUrl(result.assets[0].uri);
+      }
+    } catch (e: any) {
+      Alert.alert('Error', 'Failed to open image picker');
     }
   };
 
@@ -150,20 +209,11 @@ export default function EditProfileScreen({ navigation }: any) {
               />
               <TouchableOpacity
                 onPress={async () => {
-                  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-                  if (status !== 'granted') {
-                    Alert.alert('Permission Denied', 'We need camera roll permissions to change your photo.');
-                    return;
-                  }
-                  const result = await ImagePicker.launchImageLibraryAsync({
-                    mediaTypes: ['images'],
-                    allowsEditing: true,
-                    aspect: [1, 1],
-                    quality: 0.8,
-                  });
-                  if (!result.canceled && result.assets?.[0]?.uri) {
-                    setAvatarUrl(result.assets[0].uri);
-                  }
+                  Alert.alert('Change Photo', 'Take a selfie or choose from gallery', [
+                    { text: 'Take Photo', onPress: () => openAvatarPicker(true) },
+                    { text: 'Choose from Gallery', onPress: () => openAvatarPicker(false) },
+                    { text: 'Cancel', style: 'cancel' },
+                  ]);
                 }}
                 className="absolute bottom-0 right-0 bg-hi-green w-10 h-10 rounded-full items-center justify-center border-4 border-hi-bg shadow-sm"
               >

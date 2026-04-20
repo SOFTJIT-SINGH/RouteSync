@@ -7,6 +7,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, Feather, FontAwesome6 } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '../lib/supabase';
 
 const VIBES = ['Adventure', 'Roadtrip', 'Chill', 'Backpacking', 'Luxury', 'Solo'];
@@ -20,6 +21,7 @@ export default function CreateTripScreen({ navigation }: any) {
   const [budget, setBudget] = useState('');
   const [vibe, setVibe] = useState('Adventure');
   const [loading, setLoading] = useState(false);
+  const [imageUri, setImageUri] = useState<string | null>(null);
 
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date(new Date().setDate(new Date().getDate() + 3)));
@@ -43,6 +45,64 @@ export default function CreateTripScreen({ navigation }: any) {
     if (selectedDate) setEndDate(selectedDate);
   };
 
+  const pickImage = async () => {
+    Alert.alert('Add Trip Photo', 'Snap a photo or pick from gallery', [
+      { text: 'Take Photo', onPress: () => openImagePicker(true) },
+      { text: 'Choose from Gallery', onPress: () => openImagePicker(false) },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
+
+  const openImagePicker = async (isCamera: boolean) => {
+    try {
+      const { status } = isCamera 
+        ? await ImagePicker.requestCameraPermissionsAsync()
+        : await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', `We need ${isCamera ? 'camera' : 'gallery'} access to customize your trip.`);
+        return;
+      }
+
+      const options: ImagePicker.ImagePickerOptions = {
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [16, 9],
+        quality: 0.8,
+      };
+
+      const result = isCamera 
+        ? await ImagePicker.launchCameraAsync(options)
+        : await ImagePicker.launchImageLibraryAsync(options);
+
+      if (!result.canceled && result.assets?.[0]?.uri) {
+        setImageUri(result.assets[0].uri);
+      }
+    } catch (e) {
+      Alert.alert('Error', 'Could not open image picker');
+    }
+  };
+
+  const uploadTripImage = async (uri: string, userId: string) => {
+    try {
+      const fileExt = uri.split('.').pop()?.toLowerCase() || 'jpg';
+      const fileName = `${userId}/trip_${Date.now()}.${fileExt}`;
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      const arrayBuffer = await new Response(blob).arrayBuffer();
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, arrayBuffer, { contentType: `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}` });
+
+      if (uploadError) throw uploadError;
+      const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
+      return data.publicUrl;
+    } catch (e) {
+      return null;
+    }
+  };
+
   const handleCreateTrip = async () => {
     if (!source || !destination) {
       Alert.alert("Missing Details", "Please enter both a starting point and a destination.");
@@ -53,6 +113,11 @@ export default function CreateTripScreen({ navigation }: any) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("You must be logged in to create a trip.");
 
+      let finalImageUrl = null;
+      if (imageUri) {
+        finalImageUrl = await uploadTripImage(imageUri, user.id);
+      }
+
       const { error } = await supabase.from('trips').insert({
         user_id: user.id,
         source,
@@ -62,6 +127,7 @@ export default function CreateTripScreen({ navigation }: any) {
         end_date: endDate.toISOString().split('T')[0],
         budget: budget ? parseFloat(budget) : null,
         vibe,
+        image_url: finalImageUrl,
       });
 
       if (error) throw error;
@@ -86,7 +152,7 @@ export default function CreateTripScreen({ navigation }: any) {
           {/* Hero Header */}
           <View className="relative">
             <Image
-              source={{ uri: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=1000&auto=format&fit=crop' }}
+              source={{ uri: imageUri || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=1000&auto=format&fit=crop' }}
               className="w-full h-72 bg-hi-dark"
               resizeMode="cover"
             />
@@ -97,6 +163,16 @@ export default function CreateTripScreen({ navigation }: any) {
               className="absolute w-12 h-12 bg-hi-dark/50 rounded-full items-center justify-center border border-white/20"
             >
               <Ionicons name="arrow-back" size={24} color="white" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={pickImage}
+              className="absolute bottom-16 right-6 bg-white/20 px-4 py-2 rounded-full border border-white/30 backdrop-blur-md"
+            >
+              <View className="flex-row items-center">
+                 <Feather name="camera" size={14} color="white" />
+                 <Text className="text-white text-[10px] font-black ml-2 uppercase">Custom Photo</Text>
+              </View>
             </TouchableOpacity>
             <View style={{ top: insets.top + 14, right: 24 }} className="absolute">
               <View className="bg-hi-green/90 px-4 py-2 rounded-full">

@@ -223,7 +223,7 @@ export default function MatchesScreen({ navigation }: any) {
                   <View className="bg-white rounded-3xl border border-hi-gray-10 overflow-hidden">
                     <TouchableOpacity
                       activeOpacity={0.8}
-                      onPress={() => navigation.navigate('Chat', { buddyId: match.user_id, tripId: match.id })}
+                      onPress={() => navigation.navigate('TripDetail', { tripId: match.id })}
                       className="p-4"
                     >
                       <View className="flex-row">
@@ -267,7 +267,23 @@ export default function MatchesScreen({ navigation }: any) {
                             </View>
 
                             <TouchableOpacity
-                              onPress={() => navigation.navigate('Chat', { buddyId: match.user_id, tripId: match.id })}
+                              onPress={async () => {
+                                navigation.navigate('Chat', { buddyId: match.user_id, tripId: match.id });
+                                
+                                // Send Notification to Host (Optional/Background)
+                                try {
+                                  const { data: { user } } = await supabase.auth.getUser();
+                                  if (user && user.id !== match.user_id) {
+                                    await supabase.from('notifications').insert({
+                                      user_id: match.user_id,
+                                      type: 'match',
+                                      title: 'New Buddy Request!',
+                                      message: `${displayName} wants to join your trip to ${match.destination}!`,
+                                      metadata: { buddyId: user.id, tripId: match.id }
+                                    });
+                                  }
+                                } catch (e) {}
+                              }}
                               className="bg-hi-dark px-5 py-2.5 rounded-full"
                             >
                               <Text className="text-white font-black text-xs">Say Hi</Text>

@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabase';
 import Navbar from '../components/Navbar';
 import HeroButtons from '../components/HeroButtons';
 import ActiveSyncs from '../components/ActiveSyncs';
+import MyJourneys from '../components/MyJourneys';
 import BuddyMatch from '../components/BuddyMatch';
 import AddItinerary from '../components/AddItinerary';
 
@@ -92,8 +93,11 @@ export default function HomeScreen({ navigation }: any) {
               <Text className="text-sm font-bold text-hi-green">See all →</Text>
             </TouchableOpacity>
           </View>
-          <ActiveSyncs />
+          <ActiveSyncs navigation={navigation} />
         </View>
+
+        {/* My Journeys – Section */}
+        <MyJourneys navigation={navigation} />
 
         {/* Add Itinerary – Prominent Card */}
         <View className="mb-10">

@@ -97,9 +97,38 @@ export default function UserProfileScreen({ route, navigation }: any) {
     }
   };
 
-  const handleFollow = () => {
-    // In production, insert/delete from a `follows` table
-    setIsFollowing(!isFollowing);
+  const handleFollow = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        Alert.alert('Join RouteSync', 'Log in to follow other travelers!');
+        return;
+      }
+
+      if (isFollowing) {
+        // Unfollow
+        const { error } = await supabase
+          .from('follows')
+          .delete()
+          .eq('follower_id', user.id)
+          .eq('following_id', userId);
+        
+        if (error) throw error;
+        setIsFollowing(false);
+        setProfile((prev: any) => ({ ...prev, followers: Math.max(0, prev.followers - 1) }));
+      } else {
+        // Follow
+        const { error } = await supabase
+          .from('follows')
+          .insert({ follower_id: user.id, following_id: userId });
+        
+        if (error) throw error;
+        setIsFollowing(true);
+        setProfile((prev: any) => ({ ...prev, followers: prev.followers + 1 }));
+      }
+    } catch (e: any) {
+      Alert.alert('Error', e.message);
+    }
   };
 
   const handleMessage = () => {
@@ -170,14 +199,20 @@ export default function UserProfileScreen({ route, navigation }: any) {
               <Text className="text-xl font-bold text-gray-900">{p.trips}</Text>
               <Text className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-1">Trips</Text>
             </View>
-            <View className="items-center">
-              <Text className="text-xl font-bold text-gray-900">{isFollowing ? p.followers + 1 : p.followers}</Text>
+            <TouchableOpacity 
+              onPress={() => navigation.navigate('Connections', { userId, initialTab: 'Followers' })}
+              className="items-center"
+            >
+              <Text className="text-xl font-bold text-gray-900">{p.followers}</Text>
               <Text className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-1">Followers</Text>
-            </View>
-            <View className="items-center">
+            </TouchableOpacity>
+            <TouchableOpacity 
+              onPress={() => navigation.navigate('Connections', { userId, initialTab: 'Following' })}
+              className="items-center"
+            >
               <Text className="text-xl font-bold text-gray-900">{p.following}</Text>
               <Text className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-1">Following</Text>
-            </View>
+            </TouchableOpacity>
           </View>
 
           {/* Action Buttons */}
@@ -213,6 +248,7 @@ export default function UserProfileScreen({ route, navigation }: any) {
             {posts.map((post, index) => (
               <TouchableOpacity 
                 key={post.id} 
+                onPress={() => navigation.navigate('PostDetail', { postId: post.id, initialPost: post })}
                 className="w-1/3 aspect-square p-[1px]"
                 activeOpacity={0.8}
               >

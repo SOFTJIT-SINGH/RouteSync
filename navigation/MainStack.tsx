@@ -27,12 +27,13 @@ import SettingsScreen from '../screens/SettingsScreen';
 import UserProfileScreen from '../screens/UserProfileScreen';
 import UserSearchScreen from '../screens/UserSearchScreen';
 
-// Placeholder screen for drawer items
-const SavedTripsScreen = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FAFAFA' }}>
-    <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#292C27' }}>Saved Itineraries</Text>
-  </View>
-);
+import MyTripsScreen from '../screens/MyTripsScreen';
+import TripDetailScreen from '../screens/TripDetailScreen';
+import EditPostScreen from '../screens/EditPostScreen';
+import SavedPostsScreen from '../screens/SavedPostsScreen';
+import LikedPostsScreen from '../screens/LikedPostsScreen';
+import ConnectionsScreen from '../screens/ConnectionsScreen';
+import PostDetailScreen from '../screens/PostDetailScreen';
 
 // Safe fallback avatar
 const DEFAULT_AVATAR_URL = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150&auto=format&fit=crop';
@@ -174,6 +175,12 @@ function MainStack() {
       <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ presentation: 'modal' }} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
+      <Stack.Screen name="TripDetail" component={TripDetailScreen} />
+      <Stack.Screen name="EditPost" component={EditPostScreen} />
+      <Stack.Screen name="SavedPosts" component={SavedPostsScreen} />
+      <Stack.Screen name="LikedPosts" component={LikedPostsScreen} />
+      <Stack.Screen name="Connections" component={ConnectionsScreen} />
+      <Stack.Screen name="PostDetail" component={PostDetailScreen} />
     </Stack.Navigator>
   );
 }
@@ -206,10 +213,10 @@ export default function AppNavigator() {
       />
       <Drawer.Screen
         name="SavedTrips"
-        component={SavedTripsScreen}
+        component={MyTripsScreen}
         options={{
-          title: 'Saved Itineraries',
-          drawerIcon: ({ color }) => <Feather name="bookmark" size={22} color={color} />,
+          title: 'My Journeys',
+          drawerIcon: ({ color }) => <Feather name="map" size={22} color={color} />,
         }}
       />
       <Drawer.Screen
