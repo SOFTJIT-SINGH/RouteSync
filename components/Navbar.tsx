@@ -10,14 +10,34 @@ export default function Navbar() {
   const navigation = useNavigation<any>();
 
   useEffect(() => {
+    let channel: any;
+
     const fetchUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        // Initial fetch
         const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
         setProfile(data);
+
+        // Real-time listener for this specific user's profile
+        channel = supabase.channel(`public:profiles:id=eq.${user.id}`)
+          .on('postgres_changes', { 
+            event: 'UPDATE', 
+            schema: 'public', 
+            table: 'profiles',
+            filter: `id=eq.${user.id}`
+          }, (payload) => {
+            setProfile(payload.new);
+          })
+          .subscribe();
       }
     };
+    
     fetchUser();
+
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
   }, []);
 
   const displayName = profile?.first_name || profile?.full_name?.split(' ')[0] || 'Soft';
@@ -51,7 +71,10 @@ export default function Navbar() {
       </View>
 
       <View className="flex-row items-center gap-3">
-        <TouchableOpacity className="w-10 h-10 rounded-full items-center justify-center bg-hi-bg border border-hi-gray-10">
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('UserSearch')}
+          className="w-10 h-10 rounded-full items-center justify-center bg-hi-bg border border-hi-gray-10"
+        >
           <Ionicons name="search" size={20} color="#292C27" />
         </TouchableOpacity>
 

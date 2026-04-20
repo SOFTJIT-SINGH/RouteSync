@@ -15,8 +15,15 @@ export default function RootNavigator() {
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
+      
+      if (event === 'PASSWORD_RECOVERY') {
+        setTimeout(() => {
+          const { navigate } = require('./navigationRef');
+          navigate('ResetPassword');
+        }, 500);
+      }
     });
 
     return () => subscription.unsubscribe();

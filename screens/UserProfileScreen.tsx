@@ -37,6 +37,34 @@ export default function UserProfileScreen({ route, navigation }: any) {
         .select('*')
         .eq('id', userId)
         .single();
+
+      // Fetch Trips count
+      const { count: tripsCount } = await supabase
+        .from('trips')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId);
+
+      // Fetch Followers count
+      const { count: followersCount } = await supabase
+        .from('follows')
+        .select('*', { count: 'exact', head: true })
+        .eq('following_id', userId);
+
+      // Fetch Following count
+      const { count: followingCount } = await supabase
+        .from('follows')
+        .select('*', { count: 'exact', head: true })
+        .eq('follower_id', userId);
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { count: isFollowingCount } = await supabase
+          .from('follows')
+          .select('*', { count: 'exact', head: true })
+          .eq('follower_id', user.id)
+          .eq('following_id', userId);
+        setIsFollowing(!!isFollowingCount && isFollowingCount > 0);
+      }
         
       if (profileData) {
         setProfile({
@@ -44,9 +72,9 @@ export default function UserProfileScreen({ route, navigation }: any) {
           username: profileData.username || `user_${userId.substring(0,6)}`,
           avatar: profileData.avatar_url || 'https://i.pravatar.cc/150',
           bio: profileData.bio || 'Exploring the world, one journey at a time. Wanderlust and city dust. ✈️🌍',
-          followers: 1204, // Mock stats
-          following: 450,
-          trips: 12
+          followers: followersCount || 0,
+          following: followingCount || 0,
+          trips: tripsCount || 0
         });
       }
 
@@ -59,9 +87,11 @@ export default function UserProfileScreen({ route, navigation }: any) {
 
       if (postsData && postsData.length > 0) {
         setPosts(postsData.map(p => ({ id: p.id, image: p.image_url })));
+      } else {
+        setPosts([]); // Clear mock posts if no real posts exist
       }
     } catch (e) {
-      console.log('Using mock profile data');
+      console.log('Error fetching user data', e);
     } finally {
       setLoading(false);
     }
@@ -151,7 +181,7 @@ export default function UserProfileScreen({ route, navigation }: any) {
           </View>
 
           {/* Action Buttons */}
-          <View className="flex-row w-full mt-6 space-x-3">
+          <View className="flex-row w-full mt-6 space-x-3 ">
             <TouchableOpacity 
               onPress={handleFollow}
               className={`flex-1 py-3.5 rounded-full items-center justify-center transition-colors ${
@@ -165,7 +195,7 @@ export default function UserProfileScreen({ route, navigation }: any) {
 
             <TouchableOpacity 
               onPress={handleMessage}
-              className="flex-1 py-3.5 rounded-full items-center justify-center bg-gray-100 border border-gray-200"
+              className="flex-1 py-3.5 rounded-full items-center justify-center bg-gray-100 border border-gray-200 mx-2"
             >
               <Text className="font-bold text-base text-gray-900">Message</Text>
             </TouchableOpacity>

@@ -3,6 +3,7 @@ import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
   Alert, ActivityIndicator, KeyboardAvoidingView, Platform
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
@@ -61,6 +62,18 @@ const ChipSelector = ({ label, options, selected, onSelect }: any) => (
   </View>
 );
 
+const calculateAge = (dobString: string) => {
+  if (!dobString) return '';
+  const birthDate = new Date(dobString);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age.toString();
+};
+
 export default function SignupScreen({ navigation }: any) {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
@@ -78,6 +91,7 @@ export default function SignupScreen({ navigation }: any) {
   const [age, setAge] = useState('');
   const [travelStyle, setTravelStyle] = useState('');
   const [bio, setBio] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   // Step 3 – Account
   const [email, setEmail] = useState('');
@@ -96,10 +110,12 @@ export default function SignupScreen({ navigation }: any) {
         Alert.alert('Missing Info', 'Email and password are required.');
         return false;
       }
+      /* 
       if (password.length < 6) {
         Alert.alert('Weak Password', 'Password must be at least 6 characters.');
         return false;
       }
+      */
       if (password !== confirmPassword) {
         Alert.alert('Mismatch', 'Passwords do not match.');
         return false;
@@ -205,7 +221,54 @@ export default function SignupScreen({ navigation }: any) {
                 <InputField label="Age" value={age} onChangeText={setAge} placeholder="25" keyboardType="number-pad" maxLength={3} />
               </View>
             </View>
-            <InputField label="Date of Birth" value={dob} onChangeText={setDob} placeholder="YYYY-MM-DD" icon="calendar" />
+            <View className="relative">
+              <InputField 
+                label="Date of Birth" 
+                value={dob ? new Date(dob).toLocaleDateString('en-GB') : ''} 
+                placeholder="DD/MM/YYYY" 
+                icon="calendar" 
+                onChangeText={(text: string) => {
+                  // Allow manual typing in DD/MM/YYYY
+                  if (text.length === 10) {
+                    const parts = text.split('/');
+                    if (parts.length === 3) {
+                      const day = parseInt(parts[0], 10);
+                      const month = parseInt(parts[1], 10) - 1;
+                      const year = parseInt(parts[2], 10);
+                      const date = new Date(year, month, day);
+                      if (!isNaN(date.getTime()) && year > 1900 && year < new Date().getFullYear()) {
+                        const dobStr = date.toISOString().split('T')[0];
+                        setDob(dobStr);
+                        setAge(calculateAge(dobStr));
+                      }
+                    }
+                  }
+                }}
+              />
+              <TouchableOpacity 
+                onPress={() => setShowDatePicker(true)}
+                className="absolute right-4 top-10 w-10 h-10 items-center justify-center"
+              >
+                <Feather name="calendar" size={18} color="#30AF5B" />
+              </TouchableOpacity>
+            </View>
+
+            {showDatePicker && (
+              <DateTimePicker
+                value={dob ? new Date(dob) : new Date(2000, 0, 1)}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                maximumDate={new Date()}
+                onChange={(event: any, selectedDate?: Date) => {
+                  setShowDatePicker(false);
+                  if (selectedDate) {
+                    const dobStr = selectedDate.toISOString().split('T')[0];
+                    setDob(dobStr);
+                    setAge(calculateAge(dobStr));
+                  }
+                }}
+              />
+            )}
             <ChipSelector label="Gender" options={GENDERS} selected={gender} onSelect={setGender} />
             <ChipSelector label="Travel Style" options={TRAVEL_STYLES} selected={travelStyle} onSelect={setTravelStyle} />
           </View>

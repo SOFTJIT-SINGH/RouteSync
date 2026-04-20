@@ -74,38 +74,34 @@ export default function LoginScreen({ navigation }: any) {
             <TouchableOpacity
               className="self-end"
               onPress={() => {
-                Alert.prompt
-                  ? Alert.prompt(
-                      'Reset Password',
-                      'Enter your email address and we\'ll send you a reset link.',
-                      async (resetEmail: string) => {
-                        if (!resetEmail?.trim()) return;
-                        const { error } = await supabase.auth.resetPasswordForEmail(resetEmail.trim());
-                        if (error) Alert.alert('Error', error.message);
-                        else Alert.alert('Check Your Email', 'If an account exists, a password reset link has been sent.');
-                      },
-                      'plain-text',
-                      email
-                    )
-                  : Alert.alert(
-                      'Reset Password',
-                      'To reset your password, please enter your email above and tap here again.',
-                      [
-                        { text: 'Cancel', style: 'cancel' },
-                        {
-                          text: 'Send Reset Link',
-                          onPress: async () => {
-                            if (!email.trim()) {
-                              Alert.alert('Missing Email', 'Please enter your email in the field above first.');
-                              return;
-                            }
-                            const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
-                            if (error) Alert.alert('Error', error.message);
-                            else Alert.alert('Check Your Email', 'If an account exists, a password reset link has been sent.');
-                          }
+                const resetEmail = email.trim();
+                if (!resetEmail) {
+                  Alert.alert('Email Required', 'Please enter your email address in the field above to receive a reset link.');
+                  return;
+                }
+                
+                Alert.alert(
+                  'Reset Password',
+                  `We will send a password reset link to ${resetEmail}. Would you like to proceed?`,
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    { 
+                      text: 'Send Link', 
+                      onPress: async () => {
+                        setLoading(true);
+                        const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+                          redirectTo: 'routesync://reset-password',
+                        });
+                        setLoading(false);
+                        if (error) {
+                          Alert.alert('Error', error.message);
+                        } else {
+                          Alert.alert('Check Your Email', 'A reset link has been sent to your email address.');
                         }
-                      ]
-                    );
+                      }
+                    }
+                  ]
+                );
               }}
             >
               <Text className="text-hi-green font-bold text-sm">Forgot Password?</Text>

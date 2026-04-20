@@ -63,6 +63,7 @@ export default function MatchesScreen({ navigation }: any) {
   const handleSeeAll = () => {
     setSearchQuery('');
     setActiveTab('All Matches');
+    setActiveFilters({});
     fetchDynamicMatches();
   };
 

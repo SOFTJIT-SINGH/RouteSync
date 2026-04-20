@@ -3,10 +3,23 @@ import {
   View, Text, TextInput, TouchableOpacity, ScrollView, 
   Image, ActivityIndicator, Alert, KeyboardAvoidingView, Platform 
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '../lib/supabase';
+
+const calculateAge = (dobString: string) => {
+  if (!dobString) return '';
+  const birthDate = new Date(dobString);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age.toString();
+};
 
 export default function EditProfileScreen({ navigation }: any) {
   const [loading, setLoading] = useState(true);
@@ -22,6 +35,7 @@ export default function EditProfileScreen({ navigation }: any) {
   const [gender, setGender] = useState('');
   const [travelStyle, setTravelStyle] = useState('');
   const [age, setAge] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState('https://i.pravatar.cc/150');
 
   useEffect(() => {
@@ -82,7 +96,7 @@ export default function EditProfileScreen({ navigation }: any) {
         username: username,
         bio: bio,
         phone_number: phoneNumber,
-        dob: dob,
+        dob: dob || null,
         gender: gender,
         travel_style: travelStyle,
         age: age ? parseInt(age, 10) : null,
@@ -239,16 +253,56 @@ export default function EditProfileScreen({ navigation }: any) {
             <View className="flex-row gap-4">
               <View className="flex-1">
                 <Text className="text-gray-900 font-bold text-sm mb-3 ml-1">Date of Birth</Text>
-                <View className="bg-white p-4 rounded-[24px] border border-gray-100 shadow-sm shadow-gray-50 flex-row items-center">
-                  <Feather name="calendar" size={18} color="#9CA3AF" />
-                  <TextInput 
-                    value={dob}
-                    onChangeText={setDob}
-                    placeholder="YYYY-MM-DD"
-                    placeholderTextColor="#9CA3AF"
-                    className="flex-1 ml-3 text-base font-bold text-gray-900"
-                  />
+                <View className="relative">
+                  <View className="bg-white p-4 rounded-[24px] border border-gray-100 shadow-sm shadow-gray-50 flex-row items-center">
+                    <Feather name="calendar" size={18} color="#9CA3AF" />
+                    <TextInput 
+                      defaultValue={dob ? new Date(dob).toLocaleDateString('en-GB') : ''}
+                      placeholder="DD/MM/YYYY"
+                      placeholderTextColor="#9CA3AF"
+                      onChangeText={(text: string) => {
+                        if (text.length === 10) {
+                          const parts = text.split('/');
+                          if (parts.length === 3) {
+                            const day = parseInt(parts[0], 10);
+                            const month = parseInt(parts[1], 10) - 1;
+                            const year = parseInt(parts[2], 10);
+                            const date = new Date(year, month, day);
+                            if (!isNaN(date.getTime())) {
+                              const dobStr = date.toISOString().split('T')[0];
+                              setDob(dobStr);
+                              setAge(calculateAge(dobStr));
+                            }
+                          }
+                        }
+                      }}
+                      className="flex-1 ml-3 text-base font-bold text-gray-900"
+                    />
+                  </View>
+                  <TouchableOpacity 
+                    onPress={() => setShowDatePicker(true)}
+                    className="absolute right-4 top-2 w-10 h-10 items-center justify-center"
+                  >
+                    <Feather name="edit-2" size={16} color="#30AF5B" />
+                  </TouchableOpacity>
                 </View>
+
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={dob ? new Date(dob) : new Date(2000, 0, 1)}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    maximumDate={new Date()}
+                    onChange={(event: any, selectedDate?: Date) => {
+                      setShowDatePicker(false);
+                      if (selectedDate) {
+                        const dobStr = selectedDate.toISOString().split('T')[0];
+                        setDob(dobStr);
+                        setAge(calculateAge(dobStr));
+                      }
+                    }}
+                  />
+                )}
               </View>
 
               <View className="flex-1">

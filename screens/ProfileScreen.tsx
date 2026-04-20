@@ -29,7 +29,7 @@ export default function ProfileScreen({ navigation }: any) {
         .maybeSingle();
       
       if (profileError) throw profileError;
-      setProfile(profileData);
+      setProfile({ ...profileData, email: user.email });
 
       const { data: tripData, error: tripError } = await supabase
         .from('trips')
@@ -183,7 +183,7 @@ export default function ProfileScreen({ navigation }: any) {
           </View>
 
           {/* 5. Vibe / Interests */}
-          <View className="mb-10">
+          <View className="mb-8">
             <Text className="text-xl font-bold text-hi-dark tracking-tight mb-4">Travel Vibe</Text>
             <View className="flex-row flex-wrap gap-2">
               {(profile?.travel_style
@@ -194,6 +194,85 @@ export default function ProfileScreen({ navigation }: any) {
                   <Text className="text-sm font-semibold text-hi-gray-50 px-1">{interest}</Text>
                 </View>
               ))}
+            </View>
+          </View>
+
+          {/* 5.5. Personal Details */}
+          <View className="mb-10">
+            <View className="flex-row items-center justify-between mb-4">
+              <Text className="text-xl font-bold text-hi-dark tracking-tight">Personal Details</Text>
+              <View className="bg-hi-green/10 px-3 py-1 rounded-full border border-hi-green/10">
+                 <Text className="text-[10px] font-black text-hi-green uppercase tracking-tighter">Verified</Text>
+              </View>
+            </View>
+            
+            <View className="bg-white p-5 rounded-3xl border border-hi-gray-10 shadow-sm shadow-gray-100 flex-col gap-6">
+              {/* Email (From Auth) */}
+              <View className="flex-row items-center">
+                <View className="bg-blue-50 w-10 h-10 rounded-xl items-center justify-center mr-4 border border-blue-100">
+                  <Feather name="mail" size={16} color="#3B82F6" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-[10px] font-black text-hi-gray-30 uppercase tracking-widest mb-0.5">Account Email</Text>
+                  <Text className="text-base font-bold text-hi-dark" numberOfLines={1}>
+                    {profile?.email || 'authenticated@user.com'}
+                  </Text>
+                </View>
+              </View>
+
+              {profile?.phone_number && (
+                <View className="flex-row items-center">
+                  <View className="bg-hi-green/10 w-10 h-10 rounded-xl items-center justify-center mr-4 border border-hi-green/20">
+                    <Feather name="phone" size={16} color="#30AF5B" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-[10px] font-black text-hi-gray-30 uppercase tracking-widest mb-0.5">Phone Number</Text>
+                    <Text className="text-base font-bold text-hi-dark">{profile.phone_number}</Text>
+                  </View>
+                </View>
+              )}
+
+              {profile?.gender && (
+                <View className="flex-row items-center">
+                  <View className="bg-purple-50 w-10 h-10 rounded-xl items-center justify-center mr-4 border border-purple-100">
+                    <Feather name="user" size={16} color="#A855F7" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-[10px] font-black text-hi-gray-30 uppercase tracking-widest mb-0.5">Identity</Text>
+                    <Text className="text-base font-bold text-hi-dark">{profile.gender} • {profile.age || 'N/A'} yrs</Text>
+                  </View>
+                </View>
+              )}
+
+              {profile?.dob && (
+                <View className="flex-row items-center">
+                  <View className="bg-hi-orange/10 w-10 h-10 rounded-xl items-center justify-center mr-4 border border-hi-orange/20">
+                    <Feather name="calendar" size={16} color="#FF7E5F" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-[10px] font-black text-hi-gray-30 uppercase tracking-widest mb-0.5">Birthday</Text>
+                    <Text className="text-base font-bold text-hi-dark">
+                      {new Date(profile.dob).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                    </Text>
+                  </View>
+                </View>
+              )}
+
+              {profile?.travel_style && (
+                <View className="flex-row items-center">
+                  <View className="bg-hi-green/10 w-10 h-10 rounded-xl items-center justify-center mr-4 border border-hi-green/20">
+                    <Feather name="briefcase" size={16} color="#30AF5B" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-[10px] font-black text-hi-gray-30 uppercase tracking-widest mb-0.5">Primary Travel Style</Text>
+                    <Text className="text-base font-bold text-hi-dark">{profile.travel_style}</Text>
+                  </View>
+                </View>
+              )}
+
+              {!profile?.phone_number && !profile?.dob && !profile?.gender && !profile?.age && (
+                 <Text className="text-sm text-hi-gray-30 text-center py-2 font-medium">Add more details in Edit Profile!</Text>
+              )}
             </View>
           </View>
 

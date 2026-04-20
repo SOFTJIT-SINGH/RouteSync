@@ -25,6 +25,7 @@ import NotificationsScreen from '../screens/NotificationsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 
 import UserProfileScreen from '../screens/UserProfileScreen';
+import UserSearchScreen from '../screens/UserSearchScreen';
 
 // Placeholder screen for drawer items
 const SavedTripsScreen = () => (
@@ -167,6 +168,7 @@ function MainStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="RootTabs" component={TabNavigator} />
       <Stack.Screen name="Chat" component={ChatScreen} />
+      <Stack.Screen name="UserSearch" component={UserSearchScreen} />
       <Stack.Screen name="UserProfile" component={UserProfileScreen} />
       <Stack.Screen name="CreateTrip" component={CreateTripScreen} options={{ presentation: 'modal' }} />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ presentation: 'modal' }} />
