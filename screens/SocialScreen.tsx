@@ -144,7 +144,7 @@ export default function SocialScreen() {
         let savedPostIds: Set<string> = new Set();
         if (user) {
           const [{ data: likes }, { data: saves }] = await Promise.all([
-            supabase.from('post_likes').select('post_id').eq('user_id', user.id),
+            supabase.from('likes').select('post_id').eq('user_id', user.id),
             supabase.from('post_bookmarks').select('post_id').eq('user_id', user.id)
           ]);
           
@@ -357,9 +357,9 @@ export default function SocialScreen() {
 
     try {
       if (wasLiked) {
-        await supabase.from('post_likes').delete().eq('post_id', postId).eq('user_id', userId);
+        await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', userId);
       } else {
-        await supabase.from('post_likes').insert({ post_id: postId, user_id: userId });
+        await supabase.from('likes').insert({ post_id: postId, user_id: userId });
       }
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       // Update the like count on the post
@@ -443,7 +443,7 @@ export default function SocialScreen() {
 
     try {
       const { data, error } = await supabase
-        .from('post_comments')
+        .from('comments')
         .select('*, profiles(full_name, first_name, username, avatar_url)')
         .eq('post_id', post.id)
         .order('created_at', { ascending: true });
@@ -489,7 +489,7 @@ export default function SocialScreen() {
     if (activePostId.startsWith('mock-')) return;
 
     try {
-      const { error } = await supabase.from('post_comments').insert({
+      const { error } = await supabase.from('comments').insert({
         post_id: activePostId,
         user_id: userId,
         text,

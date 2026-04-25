@@ -22,7 +22,7 @@ export default function LikedPostsScreen({ navigation }: any) {
       if (!user) return;
 
       const { data, error } = await supabase
-        .from('post_likes')
+        .from('likes')
         .select('post_id, posts(*, profiles(*))')
         .eq('user_id', user.id);
 
