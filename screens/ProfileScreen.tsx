@@ -312,21 +312,46 @@ export default function ProfileScreen({ navigation }: any) {
           {/* 3.6 Conditional Achievements (DYNAMIC) */}
           <View className="mb-10">
              <View className="flex-row justify-between items-center mb-4">
-               <Text className="text-xl font-bold text-hi-dark tracking-tight">Achievements</Text>
+               <View className="flex-row items-center">
+                 <Text className="text-xl font-bold text-hi-dark tracking-tight">Achievements</Text>
+                 <TouchableOpacity 
+                   onPress={() => {
+                     Alert.alert(
+                       "Badge Guide",
+                       "🏆 Early Bird: Share your 1st post\n📸 Storyteller: Share 5+ posts\n🏔️ Explorer: Create your 1st trip\n🔥 Rising Star: Get your 1st follower\n📜 Author: Complete your bio\n🤳 Identified: Upload profile photo\n🗺️ Trailblazer: Visit 3+ destinations\n🛡️ Verified: Become a verified traveler",
+                       [{ text: "Got it!", style: "cancel" }]
+                     );
+                   }}
+                   className="ml-2"
+                 >
+                   <Ionicons name="information-circle-outline" size={18} color="#9CA3AF" />
+                 </TouchableOpacity>
+               </View>
                <View className="bg-hi-bg px-3 py-1 rounded-full">
                   <Text className="text-[10px] font-black text-hi-gray-30 uppercase">
-                    {[myPosts.length > 0, myTrips.length > 0, (profile?.followersCount || 0) > 0, !!profile?.bio, !!profile?.avatar_url, myPosts.length > 5].filter(Boolean).length} Earned
+                    {[
+                      myPosts.length > 0, 
+                      myTrips.length > 0, 
+                      (profile?.followersCount || 0) > 0, 
+                      !!profile?.bio, 
+                      !!profile?.avatar_url, 
+                      myPosts.length >= 5,
+                      [...new Set(myTrips.map(t => t.destination).filter(Boolean))].length >= 3,
+                      profile?.verification_status === true
+                    ].filter(Boolean).length} Earned
                   </Text>
                </View>
              </View>
              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -24 }} contentContainerStyle={{ paddingHorizontal: 24, gap: 12 }}>
                 {([
-                  myPosts.length > 0 && { icon: '🏆', label: 'Early Bird', color: '#FCD34D' },
-                  myPosts.length > 5 && { icon: '📸', label: 'Storyteller', color: '#60A5FA' },
-                  myTrips.length > 0 && { icon: '🏔️', label: 'Explorer', color: '#A78BFA' },
-                  (profile?.followersCount || 0) > 0 && { icon: '🔥', label: 'Rising Star', color: '#F87171' },
-                  !!profile?.bio && { icon: '📜', label: 'Author', color: '#34D399' },
-                  !!profile?.avatar_url && { icon: '🤳', label: 'Identified', color: '#FB923C' }
+                  myPosts.length > 0 && { icon: '🏆', label: 'Early Bird' },
+                  myPosts.length >= 5 && { icon: '📸', label: 'Storyteller' },
+                  myTrips.length > 0 && { icon: '🏔️', label: 'Explorer' },
+                  (profile?.followersCount || 0) > 0 && { icon: '🔥', label: 'Rising Star' },
+                  !!profile?.bio && { icon: '📜', label: 'Author' },
+                  !!profile?.avatar_url && { icon: '🤳', label: 'Identified' },
+                  [...new Set(myTrips.map(t => t.destination).filter(Boolean))].length >= 3 && { icon: '🗺️', label: 'Trailblazer' },
+                  profile?.verification_status === true && { icon: '🛡️', label: 'Verified' }
                 ].filter(Boolean) as any[]).map((badge, i) => (
                   <View key={i} className="items-center">
                     <View className="w-16 h-16 bg-white rounded-full items-center justify-center shadow-sm shadow-gray-100 border border-hi-gray-10 mb-2">
