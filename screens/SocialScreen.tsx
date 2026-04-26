@@ -314,6 +314,17 @@ export default function SocialScreen() {
       } else {
         const { error } = await supabase.from('likes').insert({ post_id: postId, user_id: userId });
         if (error) throw error;
+        
+        // Add notification for the post owner
+        if (post.user.id !== userId) {
+          await supabase.from('notifications').insert({
+            user_id: post.user.id,
+            actor_id: userId,
+            type: 'like',
+            post_id: postId,
+            content: 'liked your post'
+          });
+        }
       }
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       // Update the like count on the post
@@ -445,6 +456,18 @@ export default function SocialScreen() {
         content: text,
       });
       if (error) throw error;
+
+      // Add notification for the post owner
+      const postOwnerId = posts.find(p => p.id === activePostId)?.user.id;
+      if (postOwnerId && postOwnerId !== userId) {
+        await supabase.from('notifications').insert({
+          user_id: postOwnerId,
+          actor_id: userId,
+          type: 'comment',
+          post_id: activePostId,
+          content: `commented: "${text.substring(0, 50)}${text.length > 50 ? '...' : ''}"`
+        });
+      }
 
       // Update comment count on the post
       const post = posts.find(p => p.id === activePostId);

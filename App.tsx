@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import RootNavigator from './navigation/RootNavigator';
 import { navigationRef } from './navigation/navigationRef';
+import { NotificationProvider } from './context/NotificationContext';
 
 export default function App() {
   return (
@@ -13,7 +14,9 @@ export default function App() {
       <SafeAreaProvider>
         <NavigationContainer ref={navigationRef}>
         <StatusBar style="dark" />
-          <RootNavigator />
+          <NotificationProvider>
+            <RootNavigator />
+          </NotificationProvider>
         </NavigationContainer>
       </SafeAreaProvider>
     </GestureHandlerRootView>

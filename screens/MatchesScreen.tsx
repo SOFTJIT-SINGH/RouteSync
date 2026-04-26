@@ -18,7 +18,15 @@ export default function MatchesScreen({ navigation }: any) {
   const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeFilters, setActiveFilters] = useState<{ vibe?: string; budget?: string; minBudget?: string; maxBudget?: string }>({});
+  const [activeFilters, setActiveFilters] = useState<{ 
+    vibe?: string; 
+    budget?: string; 
+    minBudget?: string; 
+    maxBudget?: string;
+    gender?: string;
+    mode?: string;
+    minTrust?: number;
+  }>({});
 
   const tabs = ['All Matches', 'Same Dates', 'High Score', 'Route Buddies'];
 
@@ -177,6 +185,20 @@ export default function MatchesScreen({ navigation }: any) {
       const max = parseFloat(activeFilters.maxBudget);
       if (!isNaN(max) && (match.budget == null || match.budget > max)) return false;
     }
+    // Gender Filter
+    if (activeFilters.gender && activeFilters.gender !== 'Any') {
+       if (match.profiles?.gender?.toLowerCase() !== activeFilters.gender.toLowerCase()) return false;
+    }
+    // Mode Filter
+    if (activeFilters.mode && activeFilters.mode !== 'Any') {
+       if (match.trip_mode?.toLowerCase() !== activeFilters.mode.toLowerCase()) return false;
+    }
+    // Trust Score Filter
+    if (activeFilters.minTrust != null) {
+       const score = 20 + (match.profiles?.avatar_url ? 20 : 0) + (match.profiles?.bio ? 20 : 0) + (match.profiles?.trips_count || 0) * 10;
+       if (score < activeFilters.minTrust) return false;
+    }
+
     // Tab filters
     if (activeTab === 'Same Dates') return hasDateOverlap(match);
     if (activeTab === 'High Score') return getCompatibility(match) >= 60;

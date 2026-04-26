@@ -119,6 +119,15 @@ export default function UserProfileScreen({ route, navigation }: any) {
           .insert({ follower_id: user.id, following_id: userId });
         
         if (error) throw error;
+
+        // Add notification for the followed user
+        await supabase.from('notifications').insert({
+          user_id: userId,
+          actor_id: user.id,
+          type: 'follow',
+          content: 'started following you'
+        });
+
         setIsFollowing(true);
         setProfile((prev: any) => ({ ...prev, followers: prev.followers + 1 }));
       }
@@ -210,52 +219,69 @@ export default function UserProfileScreen({ route, navigation }: any) {
             )}
           </View>
           <Text className="text-sm font-medium text-gray-500 mt-1">{p.bio}</Text>
+        </View>
 
-          {/* Stats */}
-          <View className="flex-row w-full justify-around mt-6 pt-6 border-t border-gray-100">
-            <View className="items-center">
-              <Text className="text-xl font-bold text-gray-900">{p.trips}</Text>
-              <Text className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-1">Trips</Text>
-            </View>
-            <View className="items-center">
-              <Text className="text-xl font-bold text-hi-green">
-                {Math.min(100, 20 + (p.avatar ? 20 : 0) + (p.bio ? 20 : 0) + (p.trips * 10))}%
-              </Text>
-              <Text className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-1">Safety</Text>
-            </View>
-            <TouchableOpacity 
-              onPress={() => navigation.navigate('Connections', { userId, initialTab: 'Followers' })}
-              className="items-center"
-            >
-              <Text className="text-xl font-bold text-gray-900">{p.followers}</Text>
-              <Text className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-1">Followers</Text>
-            </TouchableOpacity>
-          </View>
+        {/* Stats / Traveler Analytics */}
+        <View className="px-6 mt-8">
+           <Text className="text-lg font-black text-gray-900 mb-4 tracking-tight">Traveler Analytics</Text>
+           <View className="flex-row gap-3">
+              <View className="flex-1 bg-gray-50 p-4 rounded-3xl border border-gray-100 items-center">
+                 <View className="w-8 h-8 bg-hi-green/10 rounded-full items-center justify-center mb-2">
+                    <Feather name="check-circle" size={14} color="#30AF5B" />
+                 </View>
+                 <Text className="text-lg font-black text-gray-900">{p.trips}</Text>
+                 <Text className="text-[9px] font-black text-gray-400 uppercase tracking-tighter mt-0.5">Trips</Text>
+              </View>
 
-          {/* Action Buttons */}
-          <View className="flex-row w-full mt-6 space-x-3 ">
-            <TouchableOpacity 
-              onPress={handleFollow}
-              className={`flex-1 py-3.5 rounded-full items-center justify-center transition-colors ${
-                isFollowing ? 'bg-gray-100 border border-gray-200' : 'bg-[#30AF5B]'
-              }`}
-            >
-              <Text className={`font-bold text-base ${isFollowing ? 'text-gray-900' : 'text-white'}`}>
-                {isFollowing ? 'Following' : 'Follow'}
-              </Text>
-            </TouchableOpacity>
+              <View className="flex-1 bg-gray-50 p-4 rounded-3xl border border-gray-100 items-center">
+                 <View className="w-8 h-8 bg-blue-50 rounded-full items-center justify-center mb-2">
+                    <Feather name="shield" size={14} color="#3B82F6" />
+                 </View>
+                 <Text className="text-lg font-black text-gray-900">
+                    {Math.min(100, 20 + (p.avatar ? 20 : 0) + (p.bio ? 20 : 0) + (p.trips * 10))}%
+                 </Text>
+                 <Text className="text-[9px] font-black text-gray-400 uppercase tracking-tighter mt-0.5">Trust</Text>
+              </View>
 
-            <TouchableOpacity 
-              onPress={handleMessage}
-              className="flex-1 py-3.5 rounded-full items-center justify-center bg-gray-100 border border-gray-200 mx-2"
-            >
-              <Text className="font-bold text-base text-gray-900">Message</Text>
-            </TouchableOpacity>
-          </View>
+              <View className="flex-1 bg-gray-50 p-4 rounded-3xl border border-gray-100 items-center">
+                 <View className="w-8 h-8 bg-hi-orange/10 rounded-full items-center justify-center mb-2">
+                    <Feather name="users" size={14} color="#F97316" />
+                 </View>
+                 <Text className="text-lg font-black text-gray-900">{p.followers}</Text>
+                 <Text className="text-[9px] font-black text-gray-400 uppercase tracking-tighter mt-0.5">Fans</Text>
+              </View>
+           </View>
+        </View>
+
+        {/* Achievements */}
+        <View className="px-6 mt-10">
+           <Text className="text-lg font-black text-gray-900 mb-4 tracking-tight">Achievements</Text>
+           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -24 }} contentContainerStyle={{ paddingHorizontal: 24, gap: 12 }}>
+              {([
+                posts.length > 0 && { icon: '🏆', label: 'Early Bird' },
+                posts.length >= 5 && { icon: '📸', label: 'Storyteller' },
+                p.trips > 0 && { icon: '🏔️', label: 'Explorer' },
+                p.followers > 0 && { icon: '🔥', label: 'Rising Star' },
+                p.bio?.length > 20 && { icon: '📜', label: 'Author' },
+                !!p.avatar && { icon: '🤳', label: 'Identified' },
+                p.trips >= 3 && { icon: '🗺️', label: 'Trailblazer' },
+                p.isVerified && { icon: '🛡️', label: 'Verified' }
+              ].filter(Boolean) as any[]).map((badge, i) => (
+                <View key={i} className="items-center">
+                  <View className="w-14 h-14 bg-white rounded-full items-center justify-center shadow-sm shadow-gray-100 border border-gray-100 mb-2">
+                     <Text className="text-xl">{badge.icon}</Text>
+                  </View>
+                  <Text className="text-[9px] font-bold text-gray-400">{badge.label}</Text>
+                </View>
+              ))}
+              {posts.length === 0 && p.trips === 0 && (
+                <Text className="text-gray-400 text-xs italic py-4">No badges earned yet.</Text>
+              )}
+           </ScrollView>
         </View>
 
         {/* Posts Grid */}
-        <View className="mt-8">
+        <View className="mt-10">
           <View className="px-6 flex-row items-center space-x-2 mb-4">
             <Ionicons name="grid" size={20} color="#1F2937" />
             <Text className="text-lg font-bold text-gray-900 tracking-tight">Recent Posts</Text>
