@@ -22,15 +22,19 @@ export default function BuddyMatch({ navigation }: { navigation: any }) {
         profileQuery = profileQuery.neq('id', user.id);
       }
       
-      const { data: profileData, error: profileError } = await profileQuery.limit(1).maybeSingle();
+      // Fetch 10 candidates to choose from
+      const { data: profiles, error: profileError } = await profileQuery.limit(10);
 
-      if (profileData) {
-        setMatch(profileData);
+      if (profiles && profiles.length > 0) {
+        // Pick one at random from the candidates
+        const randomIndex = Math.floor(Math.random() * profiles.length);
+        const selectedProfile = profiles[randomIndex];
+        setMatch(selectedProfile);
 
         const { data: tripData } = await supabase
           .from('trips')
           .select('destination, start_date')
-          .eq('user_id', profileData.id)
+          .eq('user_id', selectedProfile.id)
           .order('start_date', { ascending: true })
           .limit(1)
           .maybeSingle();
