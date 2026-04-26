@@ -3,6 +3,7 @@ import { View, Text, ScrollView, ImageBackground, Image, ActivityIndicator, Touc
 import { FontAwesome6, Feather, Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
+import Avatar from './Avatar';
 
 const CARD_WIDTH = 300;
 const CARD_MARGIN = 16;
@@ -107,7 +108,7 @@ const ActiveSyncs = ({ navigation }: any) => {
         {routes.map((route, index) => {
           const userProfile = route.profiles || {};
           const displayName = userProfile.first_name || userProfile.full_name || 'Traveler';
-          const avatarUrl = userProfile.avatar_url || 'https://i.pravatar.cc/150';
+          const avatarUrl = userProfile.avatar_url || null;
           const cardImage = route.image_url || FALLBACK_IMAGES[index % FALLBACK_IMAGES.length];
 
           return (
@@ -141,10 +142,7 @@ const ActiveSyncs = ({ navigation }: any) => {
                       onPress={() => navigation.navigate('UserProfile', { userId: userProfile.id })}
                       className="flex-row items-center"
                     >
-                      <Image
-                        source={{ uri: avatarUrl }}
-                        className="w-11 h-11 rounded-full border-2 border-white/60"
-                      />
+                      <Avatar uri={avatarUrl} name={displayName} size={44} borderWidth={2} borderColor="rgba(255,255,255,0.6)" />
                       <View className="ml-3">
                         <Text className="text-white/60 text-[10px] font-bold uppercase tracking-widest">Hosted By</Text>
                         <Text className="text-white font-black text-sm">{displayName}</Text>

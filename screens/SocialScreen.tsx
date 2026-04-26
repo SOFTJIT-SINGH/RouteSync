@@ -11,46 +11,9 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { supabase } from '../lib/supabase';
 import Navbar from '../components/Navbar';
+import Avatar from '../components/Avatar';
 
-// Fallback feed in case the 'posts' table is empty
-const FALLBACK_FEED = [
-  {
-    id: 'mock-1',
-    user: { id: 'mock', name: 'Aisha Sharma', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop' },
-    location: 'Spiti Valley, Himachal',
-    image: 'https://images.unsplash.com/photo-1605649487212-4dcb3b654abf?q=80&w=1000&auto=format&fit=crop',
-    caption: 'Finally made it to the middle of nowhere. The roads were rough, but the view from Key Monastery is worth every bump. 🏔️✨',
-    likes: 342,
-    comments: 28,
-    time: '2 hours ago',
-    isLiked: false,
-    isSaved: false,
-  },
-  {
-    id: 'mock-2',
-    user: { id: 'mock', name: 'Rohan Gupta', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&auto=format&fit=crop' },
-    location: 'Varkala Cliff, Kerala',
-    image: 'https://images.unsplash.com/photo-1593693397690-362cb9666c89?q=80&w=1000&auto=format&fit=crop',
-    caption: 'Chasing sunsets and surfing waves. If anyone is around south cliff tonight, let\'s grab seafood! 🌊🏄‍♂️',
-    likes: 128,
-    comments: 15,
-    time: '5 hours ago',
-    isLiked: false,
-    isSaved: false,
-  },
-  {
-    id: 'mock-3',
-    user: { id: 'mock', name: 'Maya Patel', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=150&auto=format&fit=crop' },
-    location: 'Jaipur, Rajasthan',
-    image: 'https://images.unsplash.com/photo-1477587458883-47145ed94245?q=80&w=1000&auto=format&fit=crop',
-    caption: 'Lost in the colors of the Pink City. The architecture here tells a million stories. 🕌💖',
-    likes: 890,
-    comments: 42,
-    time: '8 hours ago',
-    isLiked: true,
-    isSaved: true,
-  }
-];
+// No more mock data — production app shows real content only
 
 const getTimeAgo = (dateStr: string): string => {
   const now = new Date();
@@ -133,7 +96,7 @@ export default function SocialScreen() {
 
       const { data, error } = await supabase
         .from('posts')
-        .select('*, profiles(id, full_name, first_name, username, avatar_url)')
+        .select('*, profiles(id, full_name, first_name, username, avatar_url, verification_status)')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -156,8 +119,9 @@ export default function SocialScreen() {
           id: dbPost.id,
           user: {
             id: dbPost.profiles?.id || dbPost.user_id,
-            name: dbPost.profiles?.full_name || dbPost.profiles?.first_name || dbPost.profiles?.username || 'Traveler',
-            avatar: dbPost.profiles?.avatar_url || 'https://i.pravatar.cc/150',
+            name: dbPost.profiles?.first_name?.trim() || dbPost.profiles?.full_name?.trim() || dbPost.profiles?.username?.trim() || 'User',
+            avatar: dbPost.profiles?.avatar_url || null,
+            isVerified: dbPost.profiles?.verification_status || false,
           },
           location: dbPost.location || 'Unknown',
           image: dbPost.image_url,
@@ -171,11 +135,11 @@ export default function SocialScreen() {
         }));
         setPosts(formatted);
       } else {
-        setPosts(FALLBACK_FEED);
+        setPosts([]);
       }
     } catch (e) {
-      console.log('Using fallback feed:', e);
-      setPosts(FALLBACK_FEED);
+      console.log('Feed fetch error:', e);
+      setPosts([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -333,18 +297,6 @@ export default function SocialScreen() {
 
   const handleLike = async (postId: string) => {
     if (!userId) return;
-    // Skip mock posts
-    if (postId.startsWith('mock-')) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setPosts(prev => prev.map(p => {
-        if (p.id === postId) {
-          return { ...p, isLiked: !p.isLiked, likes: p.isLiked ? p.likes - 1 : p.likes + 1 };
-        }
-        return p;
-      }));
-      return;
-    }
-
     const post = posts.find(p => p.id === postId);
     if (!post) return;
     const wasLiked = post.isLiked;
@@ -357,14 +309,18 @@ export default function SocialScreen() {
 
     try {
       if (wasLiked) {
-        await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', userId);
+        const { error } = await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', userId);
+        if (error) throw error;
       } else {
-        await supabase.from('likes').insert({ post_id: postId, user_id: userId });
+        const { error } = await supabase.from('likes').insert({ post_id: postId, user_id: userId });
+        if (error) throw error;
       }
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       // Update the like count on the post
-      await supabase.from('posts').update({ likes: newLikes }).eq('id', postId);
-    } catch (e) {
+      const { error: postError } = await supabase.from('posts').update({ likes: newLikes }).eq('id', postId);
+      if (postError) throw postError;
+    } catch (e: any) {
+      console.error('Like error:', e.message);
       // Revert on error
       setPosts(prev => prev.map(p =>
         p.id === postId ? { ...p, isLiked: wasLiked, likes: post.likes } : p
@@ -381,20 +337,24 @@ export default function SocialScreen() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data: existing } = await supabase
+      const { data: existing, error: checkError } = await supabase
         .from('post_bookmarks')
         .select('*')
         .eq('post_id', postId)
         .eq('user_id', user.id)
         .maybeSingle();
 
+      if (checkError) throw checkError;
+
       if (existing) {
-        await supabase.from('post_bookmarks').delete().eq('id', existing.id);
+        const { error } = await supabase.from('post_bookmarks').delete().eq('id', existing.id);
+        if (error) throw error;
       } else {
-        await supabase.from('post_bookmarks').insert({ post_id: postId, user_id: user.id });
+        const { error } = await supabase.from('post_bookmarks').insert({ post_id: postId, user_id: user.id });
+        if (error) throw error;
       }
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      console.error('Bookmark error:', e.message);
     }
   };
 
@@ -409,7 +369,7 @@ export default function SocialScreen() {
   };
 
   const handleDeletePost = (postId: string) => {
-    if (postId.startsWith('mock-')) return;
+
     Alert.alert('Delete Post', 'Are you sure you want to delete this post?', [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -432,14 +392,6 @@ export default function SocialScreen() {
     setLoadingComments(true);
     setPostComments([]);
 
-    if (post.id.startsWith('mock-')) {
-      setPostComments([
-        { id: 'c1', name: 'Kabir', text: 'Stunning place! Did you use a drone?', time: '1h' },
-        { id: 'c2', name: 'Sneha', text: 'Adding this to my bucket list 🔥', time: '20m' },
-      ]);
-      setLoadingComments(false);
-      return;
-    }
 
     try {
       const { data, error } = await supabase
@@ -455,14 +407,12 @@ export default function SocialScreen() {
           id: c.id,
           name: c.profiles?.first_name || c.profiles?.full_name || c.profiles?.username || 'User',
           avatar: c.profiles?.avatar_url,
-          text: c.text,
+          text: c.content,
           time: getTimeAgo(c.created_at),
         })));
       }
     } catch (e) {
-      setPostComments([
-        { id: 'c1', name: 'Kabir', text: 'Stunning place!', time: '1h' },
-      ]);
+      setPostComments([]);
     } finally {
       setLoadingComments(false);
     }
@@ -486,23 +436,25 @@ export default function SocialScreen() {
       p.id === activePostId ? { ...p, comments: p.comments + 1 } : p
     ));
 
-    if (activePostId.startsWith('mock-')) return;
+
 
     try {
       const { error } = await supabase.from('comments').insert({
         post_id: activePostId,
         user_id: userId,
-        text,
+        content: text,
       });
       if (error) throw error;
 
       // Update comment count on the post
       const post = posts.find(p => p.id === activePostId);
       if (post) {
-        await supabase.from('posts').update({ comments_count: post.comments + 1 }).eq('id', activePostId);
+        const { error: postError } = await supabase.from('posts').update({ comments_count: post.comments + 1 }).eq('id', activePostId);
+        if (postError) throw postError;
       }
-    } catch (e) {
-      console.warn('Failed to save comment:', e);
+    } catch (e: any) {
+      console.error('Comment error:', e.message);
+      Alert.alert('Error', 'Failed to post comment. Please try again.');
     }
   };
 
@@ -516,9 +468,16 @@ export default function SocialScreen() {
           className="flex-row items-center active:opacity-75"
           onPress={() => navigation.navigate('UserProfile', { userId: item.user.id, profile: item.user })}
         >
-          <Image source={{ uri: item.user.avatar }} className="h-11 w-11 rounded-full bg-gray-200 border border-gray-100" />
+          <Avatar uri={item.user.avatar} name={item.user.name} size={44} />
           <View className="ml-3">
-            <Text className="text-[15px] font-bold text-gray-900">{item.user.name}</Text>
+            <View className="flex-row items-center">
+              <Text className="text-[15px] font-bold text-gray-900">{item.user.name}</Text>
+              {item.user.isVerified && (
+                <View className="ml-1 bg-hi-green rounded-full p-0.5">
+                  <Ionicons name="checkmark" size={8} color="white" />
+                </View>
+              )}
+            </View>
             <View className="mt-0.5 flex-row items-center">
               <FontAwesome6 name="location-dot" size={10} color="#30AF5B" />
               <Text className="ml-1 text-xs font-semibold text-gray-500">{item.location}</Text>
@@ -614,21 +573,13 @@ export default function SocialScreen() {
 
       <View className="flex-row items-center justify-between px-6 pb-3 pt-1 z-50">
         <Text className="text-2xl font-black tracking-tight text-gray-900">Community</Text>
-        <View className="flex-row items-center">
-          <TouchableOpacity
-            onPress={() => navigation.navigate('UserSearch')}
-            className="w-10 h-10 rounded-full bg-white border border-gray-200 items-center justify-center shadow-sm shadow-gray-100 mr-3 z-50"
-          >
-            <Feather name="search" size={18} color="#4B5563" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setShowCreatePost(true)}
-            className="bg-hi-green px-4 py-2.5 rounded-full flex-row items-center shadow-sm shadow-green-900/20 z-50"
-          >
-            <Feather name="plus" size={16} color="white" />
-            <Text className="text-white font-bold text-sm ml-1.5">Post</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          onPress={() => setShowCreatePost(true)}
+          className="bg-hi-green px-4 py-2.5 rounded-full flex-row items-center shadow-sm shadow-green-900/20 z-50"
+        >
+          <Feather name="plus" size={16} color="white" />
+          <Text className="text-white font-bold text-sm ml-1.5">Post</Text>
+        </TouchableOpacity>
       </View>
 
       <FlatList
@@ -636,9 +587,26 @@ export default function SocialScreen() {
         keyExtractor={(item) => item.id}
         renderItem={renderPost}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingTop: 10, paddingBottom: 40 }}
+        contentContainerStyle={{ paddingTop: 10, paddingBottom: 40, ...(posts.length === 0 && { flex: 1 }) }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#30AF5B" />
+        }
+        ListEmptyComponent={
+          <View className="flex-1 items-center justify-center px-10">
+            <View className="w-20 h-20 bg-white rounded-full items-center justify-center mb-5 border border-gray-200">
+              <Ionicons name="camera-outline" size={36} color="#A2A2A2" />
+            </View>
+            <Text className="text-xl font-black text-gray-900 text-center">No stories yet</Text>
+            <Text className="text-gray-400 font-medium text-center mt-2 leading-relaxed">
+              Be the first to share your travel story with the community!
+            </Text>
+            <TouchableOpacity
+              onPress={() => setShowCreatePost(true)}
+              className="bg-hi-green px-6 py-3 rounded-full mt-6 shadow-sm shadow-green-900/20"
+            >
+              <Text className="text-white font-bold text-sm">Share Your First Post</Text>
+            </TouchableOpacity>
+          </View>
         }
       />
 
@@ -823,8 +791,8 @@ export default function SocialScreen() {
                         onPress={() => sendPostToBuddy(buddy.id)}
                         className="items-center"
                       >
-                         <Image source={{ uri: buddy.avatar_url || 'https://i.pravatar.cc/150' }} className="w-16 h-16 rounded-full border-2 border-hi-bg" />
-                         <Text className="text-[10px] font-bold text-hi-dark mt-2">@{buddy.username || 'Traveler'}</Text>
+                         <Avatar uri={buddy.avatar_url} name={buddy.first_name || buddy.full_name || buddy.username} size={64} borderWidth={2} borderColor="#FAFAFA" />
+                         <Text className="text-[10px] font-bold text-hi-dark mt-2">@{buddy.username || 'user'}</Text>
                       </TouchableOpacity>
                    ))}
                 </View>

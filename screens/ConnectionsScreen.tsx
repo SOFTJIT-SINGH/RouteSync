@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
+import Avatar from '../components/Avatar';
 
 export default function ConnectionsScreen({ route, navigation }: any) {
   const { userId, initialTab = 'Followers' } = route.params || {};
@@ -37,7 +38,7 @@ export default function ConnectionsScreen({ route, navigation }: any) {
           id: p.id,
           name: p.full_name || p.first_name || p.username || 'Traveler',
           username: p.username || `user_${p.id.substring(0,6)}`,
-          avatar: p.avatar_url || 'https://i.pravatar.cc/150',
+          avatar: p.avatar_url || null,
           bio: p.bio || 'RouteSync Explorer'
         };
       }) || [];
@@ -55,7 +56,7 @@ export default function ConnectionsScreen({ route, navigation }: any) {
       onPress={() => navigation.navigate('UserProfile', { userId: item.id, profile: item })}
       className="flex-row items-center px-6 py-4 border-b border-hi-gray-10 active:bg-gray-50"
     >
-      <Image source={{ uri: item.avatar }} className="w-12 h-12 rounded-full bg-hi-gray-10" />
+      <Avatar uri={item.avatar} name={item.name} size={48} />
       <View className="ml-4 flex-1">
         <Text className="text-base font-black text-hi-dark tracking-tight">@{item.username}</Text>
         <Text className="text-xs font-bold text-hi-gray-30">{item.name}</Text>

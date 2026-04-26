@@ -6,19 +6,15 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather, FontAwesome6 } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
+import Avatar from '../components/Avatar';
 
-// High-Quality Mock Posts for fallback
-const MOCK_USER_POSTS = [
-  { id: '1', image: 'https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&q=80&w=400' },
-  { id: '2', image: 'https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?auto=format&fit=crop&q=80&w=400' },
-  { id: '3', image: 'https://images.unsplash.com/photo-1533130061792-64b345e4a833?auto=format&fit=crop&q=80&w=400' },
-];
+// Fallback posts removed for production-ready feel
 
 export default function UserProfileScreen({ route, navigation }: any) {
   const { userId, profile: paramProfile } = route.params || {};
   
   const [profile, setProfile] = useState<any>(paramProfile || null);
-  const [posts, setPosts] = useState<any[]>(MOCK_USER_POSTS);
+  const [posts, setPosts] = useState<any[]>([]);
   const [isFollowing, setIsFollowing] = useState(false);
   const [loading, setLoading] = useState(!paramProfile);
   const [showOptions, setShowOptions] = useState(false);
@@ -34,7 +30,7 @@ export default function UserProfileScreen({ route, navigation }: any) {
       // Fetch Profile
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('*')
+        .select('*, email')
         .eq('id', userId)
         .single();
 
@@ -68,13 +64,14 @@ export default function UserProfileScreen({ route, navigation }: any) {
         
       if (profileData) {
         setProfile({
-          name: profileData.full_name || profileData.first_name || profileData.username || 'Traveler',
+          name: profileData.first_name?.trim() || profileData.full_name?.trim() || profileData.username?.trim() || 'Traveler',
           username: profileData.username || `user_${userId.substring(0,6)}`,
-          avatar: profileData.avatar_url || 'https://i.pravatar.cc/150',
+          avatar: profileData.avatar_url || null,
           bio: profileData.bio || 'Exploring the world, one journey at a time. Wanderlust and city dust. ✈️🌍',
           followers: followersCount || 0,
           following: followingCount || 0,
-          trips: tripsCount || 0
+          trips: tripsCount || 0,
+          isVerified: profileData.is_verified || profileData.email?.includes('hacknapp.com') || profileData.email?.includes('sskaid.com')
         });
       }
 
@@ -138,7 +135,25 @@ export default function UserProfileScreen({ route, navigation }: any) {
 
   const handleReport = () => {
     setShowOptions(false);
-    Alert.alert('Report User', 'Thank you for keeping our community safe. We will review this account.', [{ text: 'OK' }]);
+    const REASONS = ['Fake Profile', 'Harassment', 'Spam', 'Inappropriate Content', 'Other'];
+    Alert.alert('Report User', 'Why are you reporting this account?', [
+      ...REASONS.map(reason => ({
+        text: reason,
+        onPress: async () => {
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+            await supabase.from('reports').insert({
+              reporter_id: user.id,
+              reported_user_id: userId,
+              reason,
+            });
+            Alert.alert('Reported', 'Thank you for keeping our community safe. We will review this account.');
+          } catch (e: any) { Alert.alert('Error', e.message); }
+        }
+      })),
+      { text: 'Cancel', style: 'cancel' },
+    ]);
   };
 
   const handleBlock = () => {
@@ -161,7 +176,7 @@ export default function UserProfileScreen({ route, navigation }: any) {
   }
 
   const p = profile || {
-    name: 'Unknown User', username: 'unknown', avatar: 'https://i.pravatar.cc/150', bio: '', followers: 0, following: 0, trips: 0
+    name: 'Unknown User', username: 'unknown', avatar: null, bio: '', followers: 0, following: 0, trips: 0
   };
 
   return (
@@ -183,14 +198,18 @@ export default function UserProfileScreen({ route, navigation }: any) {
         {/* Profile Info */}
         <View className="items-center px-6 pt-4">
           <View className="relative">
-            <Image 
-              source={{ uri: p.avatar }} 
-              className="w-24 h-24 rounded-full border-4 border-gray-50"
-            />
+            <Avatar uri={p.avatar} name={p.name} size={96} borderWidth={4} borderColor="#F9FAFB" />
             <View className="absolute bottom-1 right-1 w-5 h-5 bg-green-500 border-2 border-white rounded-full" />
           </View>
           
-          <Text className="text-2xl font-black text-gray-900 mt-4 tracking-tight">{p.name}</Text>
+          <View className="flex-row items-center mt-4">
+            <Text className="text-2xl font-black text-gray-900 tracking-tight">{p.name}</Text>
+            {p.isVerified && (
+              <View className="ml-1.5 bg-hi-green rounded-full p-0.5">
+                <Ionicons name="checkmark" size={10} color="white" />
+              </View>
+            )}
+          </View>
           <Text className="text-sm font-medium text-gray-500 mt-1">{p.bio}</Text>
 
           {/* Stats */}
@@ -199,19 +218,18 @@ export default function UserProfileScreen({ route, navigation }: any) {
               <Text className="text-xl font-bold text-gray-900">{p.trips}</Text>
               <Text className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-1">Trips</Text>
             </View>
+            <View className="items-center">
+              <Text className="text-xl font-bold text-hi-green">
+                {Math.min(100, 20 + (p.avatar ? 20 : 0) + (p.bio ? 20 : 0) + (p.trips * 10))}%
+              </Text>
+              <Text className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-1">Safety</Text>
+            </View>
             <TouchableOpacity 
               onPress={() => navigation.navigate('Connections', { userId, initialTab: 'Followers' })}
               className="items-center"
             >
               <Text className="text-xl font-bold text-gray-900">{p.followers}</Text>
               <Text className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-1">Followers</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              onPress={() => navigation.navigate('Connections', { userId, initialTab: 'Following' })}
-              className="items-center"
-            >
-              <Text className="text-xl font-bold text-gray-900">{p.following}</Text>
-              <Text className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-1">Following</Text>
             </TouchableOpacity>
           </View>
 

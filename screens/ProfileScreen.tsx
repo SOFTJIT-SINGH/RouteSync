@@ -4,12 +4,14 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons, Feather, FontAwesome6 } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
+import Avatar from '../components/Avatar';
 
 export default function ProfileScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
   const [profile, setProfile] = useState<any>(null);
   const [myTrips, setMyTrips] = useState<any[]>([]);
   const [myPosts, setMyPosts] = useState<any[]>([]);
+  const [joinRequests, setJoinRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useFocusEffect(
@@ -58,11 +60,46 @@ export default function ProfileScreen({ navigation }: any) {
 
       setProfile({ ...profileData, email: user.email, followersCount: fers || 0, followingCount: fing || 0 });
 
+      // Fetch pending join requests for user's trips
+      const tripIds = (tripData || []).map((t: any) => t.id);
+      if (tripIds.length > 0) {
+        const { data: reqData } = await supabase
+          .from('sync_requests')
+          .select('*, profiles:sender_id(id, first_name, full_name, avatar_url), trips:target_trip_id(destination)')
+          .in('target_trip_id', tripIds)
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false });
+        setJoinRequests(reqData || []);
+      }
+
     } catch (error: any) {
       console.error('Error fetching profile:', error.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAcceptRequest = async (req: any) => {
+    try {
+      await supabase.from('sync_requests').update({ status: 'accepted' }).eq('id', req.id);
+      await supabase.from('trip_members').upsert({ trip_id: req.target_trip_id, user_id: req.sender_id });
+      await supabase.from('notifications').insert({
+        user_id: req.sender_id,
+        type: 'sync',
+        title: 'Request Accepted! 🎉',
+        message: `You've been added to the trip to ${req.trips?.destination}`,
+        metadata: { tripId: req.target_trip_id },
+      });
+      setJoinRequests(prev => prev.filter(r => r.id !== req.id));
+      Alert.alert('Accepted!', `${req.profiles?.first_name || req.profiles?.full_name || 'User'} has been added to the trip.`);
+    } catch (e: any) { Alert.alert('Error', e.message); }
+  };
+
+  const handleRejectRequest = async (req: any) => {
+    try {
+      await supabase.from('sync_requests').update({ status: 'rejected' }).eq('id', req.id);
+      setJoinRequests(prev => prev.filter(r => r.id !== req.id));
+    } catch (e: any) { Alert.alert('Error', e.message); }
   };
 
   const handleLogout = async () => {
@@ -86,9 +123,9 @@ export default function ProfileScreen({ navigation }: any) {
     );
   }
 
-  const displayName = profile?.full_name || profile?.first_name || 'Traveler';
-  const username = profile?.username || `user_${profile?.id?.substring(0,8) || 'unknown'}`;
-  const avatarUrl = profile?.avatar_url || 'https://i.pravatar.cc/150';
+  const displayName = profile?.first_name?.trim() || profile?.full_name?.trim() || 'Explorer';
+  const username = profile?.username || profile?.email?.split('@')[0] || 'user';
+  const avatarUrl = profile?.avatar_url || null;
   const bio = profile?.bio || 'No bio yet. Start your journey on RouteSync!';
   const coverUrl = 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1000&auto=format&fit=crop';
 
@@ -127,10 +164,7 @@ export default function ProfileScreen({ navigation }: any) {
         <View className="bg-hi-bg rounded-t-4xl -mt-8 px-6 pt-0 pb-6 border-t border-white shadow-sm shadow-gray-200">
           <View className="flex-row justify-between items-end -mt-12 mb-4">
             <View className="relative">
-              <Image 
-                source={{ uri: avatarUrl }} 
-                className="w-24 h-24 rounded-full border-4 border-hi-bg bg-hi-gray-10"
-              />
+              <Avatar uri={avatarUrl} name={displayName} size={96} borderWidth={4} borderColor="#FAFAFA" />
               <View className="absolute bottom-1 right-1 w-5 h-5 bg-hi-green border-2 border-white rounded-full" />
             </View>
 
@@ -157,7 +191,14 @@ export default function ProfileScreen({ navigation }: any) {
           </View>
 
           <View className="mb-6">
-            <Text className="text-2xl font-black text-hi-dark tracking-tight">{displayName}</Text>
+            <View className="flex-row items-center">
+              <Text className="text-2xl font-black text-hi-dark tracking-tight">{displayName}</Text>
+              {(profile?.is_verified || profile?.email?.includes('hacknapp.com') || profile?.email?.includes('sskaid.com')) && (
+                <View className="ml-1.5 bg-hi-green rounded-full p-0.5">
+                  <Ionicons name="checkmark" size={10} color="white" />
+                </View>
+              )}
+            </View>
             <Text className="text-sm font-bold text-hi-green mt-0.5">@{username}</Text>
             <Text className="text-base text-hi-gray-50 mt-3 leading-relaxed font-medium pr-4">
               {bio}
@@ -191,27 +232,54 @@ export default function ProfileScreen({ navigation }: any) {
             </TouchableOpacity>
           </View>
 
-          {/* 3.5 Dynamic Traveler Analytics (REAL DATA) */}
+          {/* 3.5 Join Requests (for trip owners) */}
+          {joinRequests.length > 0 && (
+            <View className="mb-10">
+              <View className="flex-row items-center justify-between mb-4">
+                <Text className="text-xl font-bold text-hi-dark tracking-tight">Join Requests</Text>
+                <View className="bg-hi-green px-2.5 py-0.5 rounded-full">
+                  <Text className="text-white font-black text-[10px]">{joinRequests.length}</Text>
+                </View>
+              </View>
+              {joinRequests.map((req: any) => (
+                <View key={req.id} className="bg-white p-4 rounded-2xl border border-hi-gray-10 mb-3 flex-row items-center">
+                  <Avatar uri={req.profiles?.avatar_url} name={req.profiles?.first_name || req.profiles?.full_name || 'Traveler'} size={44} />
+                  <View className="ml-3 flex-1">
+                    <Text className="font-bold text-hi-dark">{req.profiles?.first_name || req.profiles?.full_name || 'Traveler'}</Text>
+                    <Text className="text-xs text-hi-gray-20">wants to join → {req.trips?.destination}</Text>
+                  </View>
+                  <TouchableOpacity onPress={() => handleRejectRequest(req)} className="w-9 h-9 bg-red-50 rounded-full items-center justify-center mr-2 border border-red-100">
+                    <Feather name="x" size={16} color="#EF4444" />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => handleAcceptRequest(req)} className="w-9 h-9 bg-hi-green rounded-full items-center justify-center">
+                    <Feather name="check" size={16} color="white" />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* 3.6 Dynamic Traveler Analytics */}
           <View className="mb-10">
              <Text className="text-xl font-bold text-hi-dark tracking-tight mb-4">Traveler Analytics</Text>
              <View className="flex-row gap-3">
                 <View className="flex-1 bg-hi-green/5 p-4 rounded-[28px] border border-hi-green/10">
                    <Text className="text-lg font-black text-hi-green">
-                     {myTrips.reduce((acc, trip) => acc + (trip.destination?.length || 0) * 85, 0) || 0}km
+                     {myTrips.filter(t => new Date(t.end_date) < new Date()).length}
                    </Text>
-                   <Text className="text-[10px] font-black text-hi-gray-30 uppercase tracking-widest mt-1">Distance</Text>
+                   <Text className="text-[10px] font-black text-hi-gray-30 uppercase tracking-widest mt-1">Completed</Text>
                 </View>
                 <View className="flex-1 bg-hi-bg/50 p-4 rounded-[28px] border border-hi-gray-10">
                    <Text className="text-lg font-black text-hi-dark">
                      {[...new Set(myTrips.map(t => t.destination).filter(Boolean))].length}
                    </Text>
-                   <Text className="text-[10px] font-black text-hi-gray-30 uppercase tracking-widest mt-1">Regions</Text>
+                   <Text className="text-[10px] font-black text-hi-gray-30 uppercase tracking-widest mt-1">Destinations</Text>
                 </View>
                 <View className="flex-1 bg-hi-orange/5 p-4 rounded-[28px] border border-hi-orange/10">
                    <Text className="text-lg font-black text-hi-orange">
-                     {myPosts.length > 10 ? 'Elite' : myPosts.length > 3 ? 'Expert' : 'Rookie'}
+                     {Math.min(100, 20 + (profile?.avatar_url ? 20 : 0) + (profile?.bio ? 20 : 0) + (myTrips.length * 10))}%
                    </Text>
-                   <Text className="text-[10px] font-black text-hi-gray-30 uppercase tracking-widest mt-1">Status</Text>
+                   <Text className="text-[10px] font-black text-hi-gray-30 uppercase tracking-widest mt-1">Trust Score</Text>
                 </View>
              </View>
           </View>

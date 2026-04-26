@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { DrawerActions } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
+import Avatar from './Avatar';
 
 export default function Navbar() {
   const [profile, setProfile] = useState<any>(null);
@@ -40,8 +41,7 @@ export default function Navbar() {
     };
   }, []);
 
-  const displayName = profile?.first_name || profile?.full_name?.split(' ')[0] || 'Soft';
-  const avatarUrl = profile?.avatar_url || 'https://i.pravatar.cc/150';
+  const displayName = profile?.first_name?.trim() || profile?.full_name?.trim() || 'Explorer';
 
   return (
     <View className="flex-row justify-between items-center px-4 py-3 bg-white rounded-full shadow-md shadow-gray-200/50 border border-hi-gray-10 mt-2">
@@ -56,17 +56,21 @@ export default function Navbar() {
         </TouchableOpacity>
 
         <TouchableOpacity activeOpacity={0.9} onPress={() => navigation.navigate('Profile')} className="relative">
-          <Image 
-            source={{ uri: avatarUrl }} 
-            className="w-10 h-10 rounded-full bg-hi-gray-10" 
-          />
+          <Avatar uri={profile?.avatar_url} name={displayName} size={40} />
           <View className="absolute bottom-0 right-0 w-3 h-3 bg-hi-green rounded-full border-2 border-white" />
         </TouchableOpacity>
         
         <View className="justify-center"> 
-          <Text className="text-lg font-black text-hi-dark tracking-tight leading-none ml-1">
-            {displayName}
-          </Text>
+          <View className="flex-row items-center ml-1">
+            <Text className="text-lg font-black text-hi-dark tracking-tight leading-none">
+              {displayName}
+            </Text>
+            {(profile?.is_verified || profile?.email?.includes('hacknapp.com') || profile?.email?.includes('sskaid.com')) && (
+              <View className="ml-1 bg-hi-green rounded-full p-0.5">
+                <Ionicons name="checkmark" size={8} color="white" />
+              </View>
+            )}
+          </View>
         </View>
       </View>
 

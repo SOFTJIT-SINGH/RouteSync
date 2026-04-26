@@ -1,5 +1,5 @@
 // MainStack.tsx
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, Image, TouchableOpacity, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -12,6 +12,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
+import Avatar from '../components/Avatar';
 
 // Import your screens
 import HomeScreen from '../screens/HomeScreen';
@@ -36,7 +37,7 @@ import ConnectionsScreen from '../screens/ConnectionsScreen';
 import PostDetailScreen from '../screens/PostDetailScreen';
 
 // Safe fallback avatar
-const DEFAULT_AVATAR_URL = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150&auto=format&fit=crop';
+const DEFAULT_AVATAR_URL = null; // No more placeholder — initials will be used
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -47,35 +48,38 @@ function CustomDrawerContent(props: any) {
   const insets = useSafeAreaInsets();
   const [profile, setProfile] = useState<any>(null);
 
-  useEffect(() => {
-      let isActive = true;
-      const fetchUser = async () => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user && isActive) {
-          const { data } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .maybeSingle();
-          if (data && (data.full_name || data.first_name)) {
-            setProfile(data);
-          } else {
-            const emailName = user.email?.split('@')[0] || 'Explorer';
-            setProfile({
-              full_name: 'Traveler',
-              username: emailName,
-              avatar_url: null,
-            });
-          }
-        }
-      };
-      fetchUser();
-      return () => { isActive = false; };
+  const fetchUser = useCallback(async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
+      if (data) {
+        setProfile({ ...data, email: user.email });
+      } else {
+        // No profile row yet — derive from auth
+        const emailName = user.email?.split('@')[0] || '';
+        setProfile({
+          full_name: emailName,
+          username: emailName,
+          avatar_url: null,
+          email: user.email,
+        });
+      }
+    } catch (e) {
+      console.warn('Drawer profile fetch error:', e);
+    }
   }, []);
 
-  const displayName = profile?.first_name || profile?.full_name || 'Traveler';
-  const username = profile?.username || 'explorer';
-  const avatarUrl = profile?.avatar_url || DEFAULT_AVATAR_URL;
+  // Refresh profile every time the drawer is opened
+  useFocusEffect(
+    useCallback(() => {
+      fetchUser();
+    }, [fetchUser])
+  );
+
+  const displayName = profile?.first_name?.trim() || profile?.full_name?.trim() || 'Explorer';
+  const username = profile?.username || profile?.email?.split('@')[0] || 'user';
+  const avatarUrl = profile?.avatar_url || null;
 
   return (
     <View style={{ flex: 1, backgroundColor: '#292C27', paddingTop: insets.top + 16, paddingBottom: insets.bottom, justifyContent: 'space-between' }}>
@@ -87,11 +91,15 @@ function CustomDrawerContent(props: any) {
           >
             <Feather name="x" size={18} color="#7B7B7B" />
           </TouchableOpacity>
-          <Image
-            source={{ uri: avatarUrl }}
-            style={{ width: 72, height: 72, borderRadius: 36, borderWidth: 3, borderColor: '#30AF5B', marginBottom: 16, backgroundColor: '#1f211e' }}
-          />
-          <Text style={{ fontSize: 22, fontWeight: '900', color: 'white', letterSpacing: -0.5 }}>{displayName}</Text>
+          <Avatar uri={avatarUrl} name={displayName} size={72} borderWidth={3} borderColor="#30AF5B" />
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={{ fontSize: 22, fontWeight: '900', color: 'white', letterSpacing: -0.5 }}>{displayName}</Text>
+            {(profile?.is_verified || profile?.email?.includes('hacknapp.com') || profile?.email?.includes('sskaid.com')) && (
+              <View style={{ marginLeft: 6, backgroundColor: '#30AF5B', borderRadius: 10, padding: 2 }}>
+                <Ionicons name="checkmark" size={8} color="white" />
+              </View>
+            )}
+          </View>
           <Text style={{ color: '#30AF5B', fontWeight: 'bold', fontSize: 13, marginTop: 4 }}>@{username}</Text>
         </View>
 

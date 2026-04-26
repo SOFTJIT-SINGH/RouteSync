@@ -14,16 +14,18 @@ import BuddyMatch from '../components/BuddyMatch';
 import AddItinerary from '../components/AddItinerary';
 
 export default function HomeScreen({ navigation }: any) {
-  const [displayName, setDisplayName] = useState('Traveler');
+  const [profile, setProfile] = useState<any>(null);
   const [refreshing, setRefreshing] = useState(false);
+
+  const displayName = profile?.first_name || profile?.full_name?.split(' ')[0] || 'Explorer';
 
   const fetchGreeting = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data } = await supabase.from('profiles').select('first_name, full_name').eq('id', user.id).maybeSingle();
+        const { data } = await supabase.from('profiles').select('*, email').eq('id', user.id).maybeSingle();
         if (data) {
-          setDisplayName(data.first_name || data.full_name?.split(' ')[0] || 'Traveler');
+          setProfile(data);
         }
       }
     } catch (e) {
@@ -62,9 +64,17 @@ export default function HomeScreen({ navigation }: any) {
         <View className="mt-4 mb-6 bg-white rounded-3xl p-5 shadow-sm shadow-gray-200 border border-hi-gray-10">
           <View className="flex-row items-center justify-between">
             <View className="flex-1">
-              <Text className="text-2xl font-black tracking-tight text-hi-dark">
-                Hello, {displayName}! 👋
-              </Text>
+              <View className="flex-row items-center">
+                <Text className="text-2xl font-black tracking-tight text-hi-dark">
+                  Hello, {displayName}!
+                </Text>
+                {(profile?.is_verified || profile?.email?.includes('hacknapp.com') || profile?.email?.includes('sskaid.com')) && (
+                  <View className="ml-2 bg-hi-green rounded-full p-0.5">
+                    <Ionicons name="checkmark" size={10} color="white" />
+                  </View>
+                )}
+                <Text className="text-2xl ml-1">👋</Text>
+              </View>
               <Text className="mt-1 text-sm font-medium text-hi-gray-30">
                 Ready to explore new places?
               </Text>
@@ -124,10 +134,9 @@ export default function HomeScreen({ navigation }: any) {
           </TouchableOpacity>
         </View>
 
-        {/* Feeling Lost? – Dark Promo Card (Hilink "Get App" Style) */}
-        <View className="mb-20 mt-5">
+        {/* Feeling Lost? – Dark Promo Card */}
+        <View className="mb-10 mt-5">
           <View className="bg-hi-dark rounded-4xl p-6 shadow-lg shadow-gray-900/20 relative overflow-hidden">
-            {/* Subtle background circles */}
             <View className="absolute -right-10 -top-10 w-40 h-40 bg-white/5 rounded-full" />
             <View className="absolute -left-8 -bottom-8 w-32 h-32 bg-hi-green/10 rounded-full" />
 
@@ -150,7 +159,43 @@ export default function HomeScreen({ navigation }: any) {
             </Text>
           </View>
         </View>
+
+        {/* Travel Safety Tips */}
+        <View className="mb-20">
+          <Text className="text-lg font-bold tracking-tight text-hi-dark mb-4 px-1">
+            Travel Safety Tips 🛡️
+          </Text>
+          <View className="bg-white rounded-3xl p-5 border border-hi-gray-10">
+            <View className="flex-row items-start mb-4">
+               <View className="bg-hi-green/10 p-2 rounded-xl mr-3">
+                  <Ionicons name="shield-checkmark" size={18} color="#30AF5B" />
+               </View>
+               <View className="flex-1">
+                  <Text className="font-bold text-hi-dark text-sm">Verified Profiles</Text>
+                  <Text className="text-xs text-hi-gray-30 mt-1">Look for the green checkmark to find verified travelers with high trust scores.</Text>
+               </View>
+            </View>
+            <View className="flex-row items-start">
+               <View className="bg-hi-orange/10 p-2 rounded-xl mr-3">
+                  <Ionicons name="chatbubbles" size={18} color="#FF814C" />
+               </View>
+               <View className="flex-1">
+                  <Text className="font-bold text-hi-dark text-sm">Meet in Public</Text>
+                  <Text className="text-xs text-hi-gray-30 mt-1">Always meet your sync buddies in well-lit, public places for the first time.</Text>
+               </View>
+            </View>
+          </View>
+        </View>
       </ScrollView>
+
+      {/* Floating Action Button */}
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={() => navigation.navigate('CreateTrip')}
+        className="absolute bottom-10 right-6 w-16 h-16 bg-hi-dark rounded-full items-center justify-center shadow-2xl shadow-black"
+      >
+        <Ionicons name="add" size={32} color="#30AF5B" />
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }

@@ -47,8 +47,14 @@ export default function MyTripsScreen({ navigation }: any) {
     supabase.from('trips').delete().eq('id', id).then(() => fetchMyTrips());
   };
 
-  const renderTrip = ({ item }: { item: any }) => (
-    <View className="mb-4 mx-5 bg-white rounded-3xl border border-hi-gray-10 shadow-sm shadow-gray-200 overflow-hidden">
+  const renderTrip = ({ item }: { item: any }) => {
+    const modeLabel = item.trip_mode === 'duo' ? 'Duo' : item.trip_mode === 'group' ? 'Group' : item.trip_mode === 'join_on_way' ? 'Join on Way' : 'Solo';
+    return (
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={() => navigation.navigate('MainApp', { screen: 'TripDetail', params: { tripId: item.id } })}
+      className="mb-4 mx-5 bg-white rounded-3xl border border-hi-gray-10 shadow-sm shadow-gray-200 overflow-hidden"
+    >
       <View className="p-5">
         <View className="flex-row justify-between items-start mb-3">
           <View className="flex-1">
@@ -63,7 +69,7 @@ export default function MyTripsScreen({ navigation }: any) {
             </Text>
           </View>
           <TouchableOpacity 
-            onPress={() => deleteTrip(item.id)}
+            onPress={(e) => { e.stopPropagation(); deleteTrip(item.id); }}
             className="w-10 h-10 bg-red-50 rounded-full items-center justify-center border border-red-100"
           >
              <Feather name="trash-2" size={18} color="#EF4444" />
@@ -71,24 +77,28 @@ export default function MyTripsScreen({ navigation }: any) {
         </View>
 
         <View className="flex-row items-center mt-2 pt-4 border-t border-hi-gray-10">
-          <View className="flex-row items-center mr-6">
+          <View className="flex-row items-center mr-4">
             <Ionicons name="wallet-outline" size={14} color="#30AF5B" />
             <Text className="ml-1.5 text-xs font-bold text-hi-dark">₹{item.budget?.toLocaleString() || 'Flexible'}</Text>
           </View>
-          <View className="flex-row items-center">
+          <View className="flex-row items-center mr-4">
             <Ionicons name="sparkles-outline" size={14} color="#30AF5B" />
             <Text className="ml-1.5 text-xs font-bold text-hi-dark">{item.vibe || 'Chill'}</Text>
           </View>
+          <View className="bg-hi-bg px-2.5 py-1 rounded-full border border-hi-gray-10">
+            <Text className="text-[10px] font-black text-hi-gray-50 uppercase">{modeLabel}</Text>
+          </View>
           <TouchableOpacity 
-            onPress={() => navigation.navigate('Chat', { tripId: item.id })}
+            onPress={() => navigation.navigate('MainApp', { screen: 'Chat', params: { tripId: item.id } })}
             className="ml-auto bg-hi-dark px-4 py-2 rounded-full"
           >
-            <Text className="text-white text-[10px] font-black uppercase">Open Group</Text>
+            <Text className="text-white text-[10px] font-black uppercase">Group Chat</Text>
           </TouchableOpacity>
         </View>
       </View>
-    </View>
-  );
+    </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-hi-bg" edges={['top']}>

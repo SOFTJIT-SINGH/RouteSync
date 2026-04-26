@@ -11,6 +11,14 @@ import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '../lib/supabase';
 
 const VIBES = ['Adventure', 'Roadtrip', 'Chill', 'Backpacking', 'Luxury', 'Solo'];
+const TRIP_MODES = [
+  { key: 'solo', label: 'Solo', icon: 'person', desc: 'Traveling alone, open to meetups' },
+  { key: 'duo', label: 'Duo', icon: 'people', desc: 'Looking for 1 travel partner' },
+  { key: 'group', label: 'Group', icon: 'people-circle', desc: 'Open to multiple people joining' },
+  { key: 'join_on_way', label: 'Join on Way', icon: 'git-merge', desc: 'Start solo, others join at stops' },
+];
+const OFFERING_OPTIONS = ['🚗 Car', '⛺ Tent', '📷 Camera', '🍳 Cooking Gear', '🗺️ Local Guide', '🏍️ Bike', '💻 Laptop', '🎒 Extra Gear'];
+const SEEKING_OPTIONS = ['🚗 Driver', '🧭 Navigator', '📷 Photographer', '⛽ Fuel Partner', '🏠 Stay', '🍽️ Cook', '💰 Cost Sharing', '🎵 DJ'];
 
 export default function CreateTripScreen({ navigation }: any) {
   const insets = useSafeAreaInsets();
@@ -23,10 +31,21 @@ export default function CreateTripScreen({ navigation }: any) {
   const [loading, setLoading] = useState(false);
   const [imageUri, setImageUri] = useState<string | null>(null);
 
+  // New fields
+  const [tripMode, setTripMode] = useState('solo');
+  const [maxMembers, setMaxMembers] = useState('5');
+  const [offering, setOffering] = useState<string[]>([]);
+  const [seeking, setSeeking] = useState<string[]>([]);
+  const [visibility, setVisibility] = useState('public');
+
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date(new Date().setDate(new Date().getDate() + 3)));
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
+
+  const toggleTag = (tag: string, list: string[], setList: (v: string[]) => void) => {
+    setList(list.includes(tag) ? list.filter(t => t !== tag) : [...list, tag]);
+  };
 
   const addBreak = () => setBreaks([...breaks, '']);
   const updateBreak = (text: string, index: number) => {
@@ -118,7 +137,7 @@ export default function CreateTripScreen({ navigation }: any) {
         finalImageUrl = await uploadTripImage(imageUri, user.id);
       }
 
-      const { error } = await supabase.from('trips').insert({
+      const { data: tripData, error } = await supabase.from('trips').insert({
         user_id: user.id,
         source,
         destination,
@@ -128,7 +147,17 @@ export default function CreateTripScreen({ navigation }: any) {
         budget: budget ? parseFloat(budget) : null,
         vibe,
         image_url: finalImageUrl,
-      });
+        trip_mode: tripMode,
+        max_members: tripMode === 'duo' ? 2 : parseInt(maxMembers) || 5,
+        offering,
+        seeking,
+        visibility,
+      }).select('id').single();
+
+      // Auto-add creator as trip member
+      if (tripData?.id) {
+        await supabase.from('trip_members').upsert({ trip_id: tripData.id, user_id: user.id });
+      }
 
       if (error) throw error;
 
@@ -301,7 +330,96 @@ export default function CreateTripScreen({ navigation }: any) {
                 </ScrollView>
               </View>
 
-              {/* 4. Budget */}
+              {/* 4. Trip Mode */}
+              <View>
+                <Text className="text-hi-dark font-bold text-sm mb-3 ml-1">Trip Mode</Text>
+                <View style={{ gap: 10 }}>
+                  {TRIP_MODES.map((mode) => (
+                    <TouchableOpacity
+                      key={mode.key}
+                      onPress={() => setTripMode(mode.key)}
+                      className={`flex-row items-center p-4 rounded-2xl border ${
+                        tripMode === mode.key ? 'bg-hi-green/10 border-hi-green' : 'bg-hi-bg border-hi-gray-10'
+                      }`}
+                    >
+                      <View className={`w-10 h-10 rounded-full items-center justify-center ${
+                        tripMode === mode.key ? 'bg-hi-green' : 'bg-white border border-hi-gray-10'
+                      }`}>
+                        <Ionicons name={mode.icon as any} size={20} color={tripMode === mode.key ? 'white' : '#A2A2A2'} />
+                      </View>
+                      <View className="ml-3 flex-1">
+                        <Text className={`font-bold text-base ${tripMode === mode.key ? 'text-hi-dark' : 'text-hi-gray-30'}`}>{mode.label}</Text>
+                        <Text className="text-xs text-hi-gray-20 mt-0.5">{mode.desc}</Text>
+                      </View>
+                      {tripMode === mode.key && <Ionicons name="checkmark-circle" size={22} color="#30AF5B" />}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* 5. Max Members (for Group/Join on Way) */}
+              {(tripMode === 'group' || tripMode === 'join_on_way') && (
+                <View>
+                  <Text className="text-hi-dark font-bold text-sm mb-3 ml-1">Max Group Size</Text>
+                  <View className="flex-row items-center bg-hi-bg p-5 rounded-2xl border border-hi-gray-10">
+                    <TouchableOpacity
+                      onPress={() => setMaxMembers(String(Math.max(2, parseInt(maxMembers) - 1)))}
+                      className="w-10 h-10 bg-white rounded-full items-center justify-center border border-hi-gray-10"
+                    >
+                      <Feather name="minus" size={18} color="#292C27" />
+                    </TouchableOpacity>
+                    <Text className="flex-1 text-center text-3xl font-black text-hi-dark">{maxMembers}</Text>
+                    <TouchableOpacity
+                      onPress={() => setMaxMembers(String(Math.min(20, parseInt(maxMembers) + 1)))}
+                      className="w-10 h-10 bg-white rounded-full items-center justify-center border border-hi-gray-10"
+                    >
+                      <Feather name="plus" size={18} color="#292C27" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+
+              {/* 6. Barter Tags — I Have */}
+              <View>
+                <Text className="text-hi-dark font-bold text-sm mb-3 ml-1">I Can Offer</Text>
+                <View className="flex-row flex-wrap" style={{ gap: 8 }}>
+                  {OFFERING_OPTIONS.map((tag) => (
+                    <TouchableOpacity
+                      key={tag}
+                      onPress={() => toggleTag(tag, offering, setOffering)}
+                      className={`px-4 py-2.5 rounded-full border ${
+                        offering.includes(tag) ? 'bg-hi-green/15 border-hi-green' : 'bg-hi-bg border-hi-gray-10'
+                      }`}
+                    >
+                      <Text className={`text-sm font-bold ${
+                        offering.includes(tag) ? 'text-hi-green' : 'text-hi-gray-30'
+                      }`}>{tag}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* 7. Barter Tags — I Need */}
+              <View>
+                <Text className="text-hi-dark font-bold text-sm mb-3 ml-1">I'm Looking For</Text>
+                <View className="flex-row flex-wrap" style={{ gap: 8 }}>
+                  {SEEKING_OPTIONS.map((tag) => (
+                    <TouchableOpacity
+                      key={tag}
+                      onPress={() => toggleTag(tag, seeking, setSeeking)}
+                      className={`px-4 py-2.5 rounded-full border ${
+                        seeking.includes(tag) ? 'bg-[#FF814C]/15 border-[#FF814C]' : 'bg-hi-bg border-hi-gray-10'
+                      }`}
+                    >
+                      <Text className={`text-sm font-bold ${
+                        seeking.includes(tag) ? 'text-[#FF814C]' : 'text-hi-gray-30'
+                      }`}>{tag}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* 8. Budget */}
               <View>
                 <Text className="text-hi-dark font-bold text-sm mb-3 ml-1">Estimated Budget (Optional)</Text>
                 <View className="flex-row items-center bg-hi-bg p-6 rounded-2xl border border-hi-gray-10">
@@ -314,6 +432,31 @@ export default function CreateTripScreen({ navigation }: any) {
                     keyboardType="numeric"
                     className="flex-1 ml-3 text-3xl font-black text-hi-green"
                   />
+                </View>
+              </View>
+
+              {/* 9. Visibility */}
+              <View>
+                <Text className="text-hi-dark font-bold text-sm mb-3 ml-1">Visibility</Text>
+                <View className="flex-row" style={{ gap: 10 }}>
+                  {['public', 'friends', 'private'].map((v) => (
+                    <TouchableOpacity
+                      key={v}
+                      onPress={() => setVisibility(v)}
+                      className={`flex-1 py-3.5 rounded-2xl border items-center ${
+                        visibility === v ? 'bg-hi-dark border-hi-dark' : 'bg-hi-bg border-hi-gray-10'
+                      }`}
+                    >
+                      <Feather
+                        name={v === 'public' ? 'globe' : v === 'friends' ? 'users' : 'lock'}
+                        size={16}
+                        color={visibility === v ? 'white' : '#A2A2A2'}
+                      />
+                      <Text className={`text-xs font-bold mt-1.5 capitalize ${
+                        visibility === v ? 'text-white' : 'text-hi-gray-30'
+                      }`}>{v}</Text>
+                    </TouchableOpacity>
+                  ))}
                 </View>
               </View>
             </View>

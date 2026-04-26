@@ -7,6 +7,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, Feather, FontAwesome6 } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
+import Avatar from '../components/Avatar';
 
 // Generate a unique ID without requiring crypto.randomUUID (which isn't available in all RN environments)
 const generateId = () => {
@@ -217,7 +218,7 @@ export default function ChatScreen({ navigation, route }: any) {
                     <FontAwesome6 name="users-line" size={20} color="white" />
                   </View>
                 ) : (
-                  <Image source={{ uri: buddyProfile?.avatar_url || 'https://i.pravatar.cc/150' }} className="w-11 h-11 rounded-full bg-gray-200" />
+                  <Avatar uri={buddyProfile?.avatar_url} name={buddyProfile?.first_name || 'Traveler'} size={44} />
                 )}
               </View>
               <View className="ml-3">
@@ -231,7 +232,7 @@ export default function ChatScreen({ navigation, route }: any) {
                   {isGroup && (
                     <View className="flex-row ml-2">
                       {groupMembers.slice(0, 3).map((m, i) => (
-                        <Image key={m.id} source={{ uri: m.avatar_url || 'https://i.pravatar.cc/150' }} className="w-4 h-4 rounded-full border border-white -ml-1" />
+                        <Avatar key={m.id} uri={m.avatar_url} name={m.first_name || m.full_name} size={16} />
                       ))}
                     </View>
                   )}

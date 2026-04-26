@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '../lib/supabase';
+import Avatar from '../components/Avatar';
 
 const calculateAge = (dobString: string) => {
   if (!dobString) return '';
@@ -36,7 +37,7 @@ export default function EditProfileScreen({ navigation }: any) {
   const [travelStyle, setTravelStyle] = useState('');
   const [age, setAge] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState('https://i.pravatar.cc/150');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProfile();
@@ -71,7 +72,7 @@ export default function EditProfileScreen({ navigation }: any) {
         setGender(data.gender || '');
         setTravelStyle(data.travel_style || '');
         setAge(data.age ? String(data.age) : '');
-        setAvatarUrl(data.avatar_url || 'https://i.pravatar.cc/150');
+        setAvatarUrl(data.avatar_url || null);
       }
     } catch (error: any) {
       console.error('Error fetching profile:', error.message);
@@ -117,7 +118,7 @@ export default function EditProfileScreen({ navigation }: any) {
 
       let finalAvatarUrl = avatarUrl;
       // Only upload if it's a local file URI
-      if (avatarUrl.startsWith('file://')) {
+      if (avatarUrl?.startsWith('file://')) {
         const uploaded = await uploadImage(avatarUrl, user.id);
         if (uploaded) finalAvatarUrl = uploaded;
       }
@@ -203,10 +204,7 @@ export default function EditProfileScreen({ navigation }: any) {
           {/* Avatar Edit Section */}
           <View className="items-center mt-8 mb-10">
             <View className="relative">
-              <Image 
-                source={{ uri: avatarUrl }} 
-                className="w-28 h-28 rounded-full bg-gray-200 border-4 border-white shadow-sm shadow-gray-200"
-              />
+              <Avatar uri={avatarUrl} name={`${firstName} ${lastName}`.trim() || 'User'} size={112} borderWidth={4} borderColor="white" />
               <TouchableOpacity
                 onPress={async () => {
                   Alert.alert('Change Photo', 'Take a selfie or choose from gallery', [

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Image, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
+import Avatar from './Avatar';
 
 export default function BuddyMatch({ navigation }: { navigation: any }) {
   const [match, setMatch] = useState<any>(null);
@@ -65,8 +66,8 @@ export default function BuddyMatch({ navigation }: { navigation: any }) {
     );
   }
 
-  const displayName = match.full_name || match.first_name || 'Traveler';
-  const avatarUrl = match.avatar_url || 'https://i.pravatar.cc/150';
+  const displayName = match.first_name?.trim() || match.full_name?.trim() || match.username?.trim() || 'Traveler';
+  const avatarUrl = match.avatar_url || null;
   const displayDestination = trip?.destination || 'Anywhere';
   
   const displayDate = trip?.start_date 
@@ -78,10 +79,7 @@ export default function BuddyMatch({ navigation }: { navigation: any }) {
       {/* 1. Profile Header Row */}
       <View className="flex-row items-center">
         <View className="relative">
-          <Image 
-            source={{ uri: avatarUrl }} 
-            className="w-16 h-16 rounded-full border-2 border-hi-gray-10 bg-hi-gray-10"
-          />
+          <Avatar uri={avatarUrl} name={displayName} size={64} borderWidth={2} borderColor="#EEEEEE" />
           <View className="absolute bottom-0 right-0 w-4 h-4 bg-hi-green rounded-full border-2 border-white" />
         </View>
 
@@ -118,21 +116,17 @@ export default function BuddyMatch({ navigation }: { navigation: any }) {
 
       {/* 3. Action Bar */}
       <View className="mt-5 flex-row items-center justify-between bg-hi-bg p-2.5 rounded-full border border-hi-gray-10">
-         <View className="flex-row items-center ml-2">
-           <View className="flex-row -space-x-2 mr-2">
-              <Image source={{ uri: 'https://i.pravatar.cc/100?img=33' }} className="w-7 h-7 rounded-full border-2 border-white" />
-              <Image source={{ uri: 'https://i.pravatar.cc/100?img=44' }} className="w-7 h-7 rounded-full border-2 border-white" />
+           <View className="flex-row items-center ml-2">
+             <Text className="text-xs font-bold text-hi-gray-30">{match.travel_style || match.vibe || 'Explorer'}</Text>
            </View>
-           <Text className="text-xs font-bold text-hi-gray-30">2 mutuals</Text>
-         </View>
          
          <TouchableOpacity 
            activeOpacity={0.8}
-           onPress={() => navigation.navigate('Chat')}
-           className="bg-hi-dark px-5 py-3 rounded-full flex-row items-center"
-         >
-           <Text className="text-white font-black mr-2 text-sm">Say Hi</Text>
-           <Ionicons name="send" size={14} color="white" />
+            onPress={() => navigation.navigate('UserProfile', { userId: match.id })}
+            className="bg-hi-dark px-5 py-3 rounded-full flex-row items-center"
+          >
+            <Text className="text-white font-black mr-2 text-sm">View Profile</Text>
+            <Ionicons name="arrow-forward" size={14} color="white" />
          </TouchableOpacity>
       </View>
     </View>

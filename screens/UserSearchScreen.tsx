@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { supabase } from '../lib/supabase';
+import Avatar from '../components/Avatar';
 
 export default function UserSearchScreen({ navigation }: any) {
   const [query, setQuery] = useState('');
@@ -56,7 +57,7 @@ export default function UserSearchScreen({ navigation }: any) {
 
   const renderItem = ({ item }: { item: any }) => {
     if (item.type === 'user') {
-      const avatar = item.avatar_url || 'https://i.pravatar.cc/150';
+      const avatar = item.avatar_url;
       const displayName = item.full_name || item.first_name || item.username || 'Traveler';
 
       return (
@@ -67,7 +68,7 @@ export default function UserSearchScreen({ navigation }: any) {
           }}
           className="flex-row items-center p-4 border-b border-gray-50 bg-white"
         >
-          <Image source={{ uri: avatar }} className="w-12 h-12 rounded-full bg-gray-100" />
+          <Avatar uri={avatar} name={displayName} size={48} />
           <View className="ml-4 flex-1">
             <Text className="text-base font-bold text-gray-900">{displayName}</Text>
             <Text className="text-sm font-medium text-gray-500">@{item.username || 'user'}</Text>
