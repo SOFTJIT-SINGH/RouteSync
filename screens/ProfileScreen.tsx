@@ -123,8 +123,7 @@ export default function ProfileScreen({ navigation }: any) {
     );
   }
 
-  const displayName = profile?.first_name?.trim() || profile?.full_name?.trim() || 'Explorer';
-  const username = profile?.username || profile?.email?.split('@')[0] || 'user';
+  const displayName = profile?.full_name?.trim() || profile?.first_name?.trim() || 'Explorer';
   const avatarUrl = profile?.avatar_url || null;
   const bio = profile?.bio || 'No bio yet. Start your journey on RouteSync!';
   const coverUrl = 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=1000&auto=format&fit=crop';
@@ -199,7 +198,6 @@ export default function ProfileScreen({ navigation }: any) {
                 </View>
               )}
             </View>
-            <Text className="text-sm font-bold text-hi-green mt-0.5">@{username}</Text>
             <Text className="text-base text-hi-gray-50 mt-3 leading-relaxed font-medium pr-4">
               {bio}
             </Text>

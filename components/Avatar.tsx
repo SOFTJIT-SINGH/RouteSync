@@ -37,9 +37,10 @@ export default function Avatar({ uri, name, size = 44, rounded = 'full', borderW
   const fontSize = Math.max(size * 0.38, 10);
   const borderRadius = rounded === 'full' ? size / 2 : rounded === '2xl' ? 16 : 12;
 
-  if (uri) {
+  if (uri && uri.trim().length > 0) {
     return (
       <Image
+        key={uri}
         source={{ uri }}
         style={{
           width: size,

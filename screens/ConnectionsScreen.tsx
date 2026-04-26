@@ -36,8 +36,7 @@ export default function ConnectionsScreen({ route, navigation }: any) {
         const p = isFollowingTab ? item.profiles : item.profiles;
         return {
           id: p.id,
-          name: p.full_name || p.first_name || p.username || 'Traveler',
-          username: p.username || `user_${p.id.substring(0,6)}`,
+          name: p.full_name?.trim() || p.first_name?.trim() || 'Traveler',
           avatar: p.avatar_url || null,
           bio: p.bio || 'RouteSync Explorer'
         };
@@ -58,8 +57,8 @@ export default function ConnectionsScreen({ route, navigation }: any) {
     >
       <Avatar uri={item.avatar} name={item.name} size={48} />
       <View className="ml-4 flex-1">
-        <Text className="text-base font-black text-hi-dark tracking-tight">@{item.username}</Text>
-        <Text className="text-xs font-bold text-hi-gray-30">{item.name}</Text>
+        <Text className="text-base font-black text-hi-dark tracking-tight">{item.name}</Text>
+        <Text className="text-xs font-bold text-hi-gray-30">{item.bio}</Text>
       </View>
       <Feather name="chevron-right" size={18} color="#EEEEEE" />
     </TouchableOpacity>

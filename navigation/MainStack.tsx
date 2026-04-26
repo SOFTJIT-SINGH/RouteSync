@@ -77,8 +77,7 @@ function CustomDrawerContent(props: any) {
     }, [fetchUser])
   );
 
-  const displayName = profile?.first_name?.trim() || profile?.full_name?.trim() || 'Explorer';
-  const username = profile?.username || profile?.email?.split('@')[0] || 'user';
+  const displayName = profile?.full_name?.trim() || profile?.first_name?.trim() || 'Explorer';
   const avatarUrl = profile?.avatar_url || null;
 
   return (
@@ -100,7 +99,6 @@ function CustomDrawerContent(props: any) {
               </View>
             )}
           </View>
-          <Text style={{ color: '#30AF5B', fontWeight: 'bold', fontSize: 13, marginTop: 4 }}>@{username}</Text>
         </View>
 
         <View style={{ flex: 1, paddingHorizontal: 12 }}>

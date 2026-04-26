@@ -41,7 +41,7 @@ export default function Navbar() {
     };
   }, []);
 
-  const displayName = profile?.first_name?.trim() || profile?.full_name?.trim() || 'Explorer';
+  const displayName = profile?.first_name?.trim() || profile?.full_name?.trim()?.split(' ')[0] || 'Explorer';
 
   return (
     <View className="flex-row justify-between items-center px-4 py-3 bg-white rounded-full shadow-md shadow-gray-200/50 border border-hi-gray-10 mt-2">

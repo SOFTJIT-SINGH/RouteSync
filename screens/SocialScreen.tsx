@@ -119,7 +119,7 @@ export default function SocialScreen() {
           id: dbPost.id,
           user: {
             id: dbPost.profiles?.id || dbPost.user_id,
-            name: dbPost.profiles?.first_name?.trim() || dbPost.profiles?.full_name?.trim() || dbPost.profiles?.username?.trim() || 'User',
+            name: dbPost.profiles?.full_name?.trim() || dbPost.profiles?.first_name?.trim() || 'User',
             avatar: dbPost.profiles?.avatar_url || null,
             isVerified: dbPost.profiles?.verification_status || false,
           },
@@ -405,7 +405,7 @@ export default function SocialScreen() {
       if (data) {
         setPostComments(data.map((c: any) => ({
           id: c.id,
-          name: c.profiles?.first_name || c.profiles?.full_name || c.profiles?.username || 'User',
+          name: c.profiles?.first_name || c.profiles?.full_name || 'User',
           avatar: c.profiles?.avatar_url,
           text: c.content,
           time: getTimeAgo(c.created_at),
@@ -791,8 +791,7 @@ export default function SocialScreen() {
                         onPress={() => sendPostToBuddy(buddy.id)}
                         className="items-center"
                       >
-                         <Avatar uri={buddy.avatar_url} name={buddy.first_name || buddy.full_name || buddy.username} size={64} borderWidth={2} borderColor="#FAFAFA" />
-                         <Text className="text-[10px] font-bold text-hi-dark mt-2">@{buddy.username || 'user'}</Text>
+                         <Avatar uri={buddy.avatar_url} name={buddy.first_name || buddy.full_name} size={64} borderWidth={2} borderColor="#FAFAFA" />
                       </TouchableOpacity>
                    ))}
                 </View>

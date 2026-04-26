@@ -58,7 +58,7 @@ export default function UserSearchScreen({ navigation }: any) {
   const renderItem = ({ item }: { item: any }) => {
     if (item.type === 'user') {
       const avatar = item.avatar_url;
-      const displayName = item.full_name || item.first_name || item.username || 'Traveler';
+      const displayName = item.full_name?.trim() || item.first_name?.trim() || 'Traveler';
 
       return (
         <TouchableOpacity
@@ -71,7 +71,7 @@ export default function UserSearchScreen({ navigation }: any) {
           <Avatar uri={avatar} name={displayName} size={48} />
           <View className="ml-4 flex-1">
             <Text className="text-base font-bold text-gray-900">{displayName}</Text>
-            <Text className="text-sm font-medium text-gray-500">@{item.username || 'user'}</Text>
+            <Text className="text-sm font-medium text-gray-500" numberOfLines={1}>{item.bio || 'RouteSync Traveler'}</Text>
           </View>
           <View className="bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
             <Text className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">User</Text>
@@ -94,7 +94,7 @@ export default function UserSearchScreen({ navigation }: any) {
         </View>
         <View className="ml-4 flex-1">
           <Text className="text-base font-bold text-gray-900" numberOfLines={1}>{item.caption || 'Trip Post'}</Text>
-          <Text className="text-sm font-medium text-gray-500">Post by @{item.profiles?.username || 'user'}</Text>
+          <Text className="text-sm font-medium text-gray-500">Post by {item.profiles?.first_name || item.profiles?.full_name || 'Traveler'}</Text>
         </View>
         <View className="bg-hi-green/5 px-3 py-1 rounded-full border border-hi-green/10">
           <Text className="text-[10px] font-black text-hi-green uppercase tracking-tighter">Post</Text>

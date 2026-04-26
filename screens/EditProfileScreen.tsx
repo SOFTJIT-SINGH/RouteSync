@@ -29,7 +29,6 @@ export default function EditProfileScreen({ navigation }: any) {
   // Form State
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [dob, setDob] = useState('');
@@ -65,7 +64,6 @@ export default function EditProfileScreen({ navigation }: any) {
            setFirstName(parts[0] || '');
            setLastName(parts.slice(1).join(' ') || '');
         }
-        setUsername(data.username || '');
         setBio(data.bio || '');
         setPhoneNumber(data.phone_number || '');
         setDob(data.dob || '');
@@ -117,8 +115,8 @@ export default function EditProfileScreen({ navigation }: any) {
       if (!user) throw new Error('No user logged in');
 
       let finalAvatarUrl = avatarUrl;
-      // Only upload if it's a local file URI
-      if (avatarUrl?.startsWith('file://')) {
+      // Only upload if it's a local file/content URI (not already a public URL)
+      if (avatarUrl && !avatarUrl.startsWith('http')) {
         const uploaded = await uploadImage(avatarUrl, user.id);
         if (uploaded) finalAvatarUrl = uploaded;
       }
@@ -130,7 +128,6 @@ export default function EditProfileScreen({ navigation }: any) {
         first_name: firstName,
         last_name: lastName,
         full_name: computedFullName,
-        username: username,
         bio: bio,
         phone_number: phoneNumber,
         dob: dob || null,
@@ -252,20 +249,7 @@ export default function EditProfileScreen({ navigation }: any) {
               </View>
             </View>
 
-            <View>
-              <Text className="text-gray-900 font-bold text-sm mb-3 ml-1">Username</Text>
-              <View className="bg-white p-4 rounded-[24px] border border-gray-100 shadow-sm shadow-gray-50 flex-row items-center">
-                <Feather name="at-sign" size={18} color="#9CA3AF" />
-                <TextInput 
-                  value={username}
-                  onChangeText={setUsername}
-                  placeholder="traveler123"
-                  autoCapitalize="none"
-                  placeholderTextColor="#9CA3AF"
-                  className="flex-1 ml-3 text-base font-bold text-gray-900"
-                />
-              </View>
-            </View>
+
 
             <View className="flex-row gap-4">
               <View className="flex-[2]">

@@ -66,7 +66,7 @@ export default function BuddyMatch({ navigation }: { navigation: any }) {
     );
   }
 
-  const displayName = match.first_name?.trim() || match.full_name?.trim() || match.username?.trim() || 'Traveler';
+  const displayName = match.full_name?.trim() || match.first_name?.trim() || 'Traveler';
   const avatarUrl = match.avatar_url || null;
   const displayDestination = trip?.destination || 'Anywhere';
   

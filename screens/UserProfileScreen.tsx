@@ -30,7 +30,7 @@ export default function UserProfileScreen({ route, navigation }: any) {
       // Fetch Profile
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('*, email')
+        .select('*')
         .eq('id', userId)
         .single();
 
@@ -64,14 +64,13 @@ export default function UserProfileScreen({ route, navigation }: any) {
         
       if (profileData) {
         setProfile({
-          name: profileData.first_name?.trim() || profileData.full_name?.trim() || profileData.username?.trim() || 'Traveler',
-          username: profileData.username || `user_${userId.substring(0,6)}`,
+          name: profileData.full_name?.trim() || profileData.first_name?.trim() || 'Traveler',
           avatar: profileData.avatar_url || null,
           bio: profileData.bio || 'Exploring the world, one journey at a time. Wanderlust and city dust. ✈️🌍',
           followers: followersCount || 0,
           following: followingCount || 0,
           trips: tripsCount || 0,
-          isVerified: profileData.is_verified || profileData.email?.includes('hacknapp.com') || profileData.email?.includes('sskaid.com')
+          isVerified: profileData.verification_status || false
         });
       }
 
@@ -188,7 +187,7 @@ export default function UserProfileScreen({ route, navigation }: any) {
         <TouchableOpacity onPress={() => navigation.goBack()} className="w-10 h-10 items-center justify-center">
           <Ionicons name="chevron-back" size={28} color="#1F2937" />
         </TouchableOpacity>
-        <Text className="text-base font-bold text-gray-900 tracking-tight">@{p.username}</Text>
+        <Text className="text-base font-bold text-gray-900 tracking-tight">Traveler Profile</Text>
         <TouchableOpacity onPress={() => setShowOptions(true)} className="w-10 h-10 items-center justify-center">
           <Ionicons name="ellipsis-horizontal" size={24} color="#1F2937" />
         </TouchableOpacity>
