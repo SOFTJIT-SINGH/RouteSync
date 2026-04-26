@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, ActivityIndicator, StatusBar, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -36,17 +36,26 @@ export default function PostDetailScreen({ route, navigation }: any) {
       if (error) throw error;
 
       if (data) {
-        // Check if liked/saved
-        const [{ data: like }, { data: save }] = await Promise.all([
-          supabase.from('likes').select('id').eq('post_id', postId).eq('user_id', user.id).maybeSingle(),
-          supabase.from('post_bookmarks').select('id').eq('post_id', postId).eq('user_id', user.id).maybeSingle()
-        ]);
+        // Fetch current user for like/save check
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        let isLiked = false;
+        let isSaved = false;
+
+        if (user) {
+          const [{ data: like }, { data: save }] = await Promise.all([
+            supabase.from('likes').select('id').eq('post_id', postId).eq('user_id', user.id).maybeSingle(),
+            supabase.from('post_bookmarks').select('id').eq('post_id', postId).eq('user_id', user.id).maybeSingle()
+          ]);
+          isLiked = !!like;
+          isSaved = !!save;
+        }
 
         setPost({
           id: data.id,
           user: {
             id: data.profiles?.id,
-            name: data.profiles?.first_name || data.profiles?.full_name || data.profiles?.username || 'Traveler',
+            name: data.profiles?.full_name?.trim() || data.profiles?.first_name?.trim() || 'Traveler',
             avatar: data.profiles?.avatar_url || null,
           },
           image: data.image_url,
@@ -54,8 +63,8 @@ export default function PostDetailScreen({ route, navigation }: any) {
           location: data.location || 'Unknown',
           likes: data.likes || 0,
           comments: data.comments_count || 0,
-          isLiked: !!like,
-          isSaved: !!save,
+          isLiked,
+          isSaved,
           created_at: data.created_at
         });
       }

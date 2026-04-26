@@ -35,6 +35,7 @@ import SavedPostsScreen from '../screens/SavedPostsScreen';
 import LikedPostsScreen from '../screens/LikedPostsScreen';
 import ConnectionsScreen from '../screens/ConnectionsScreen';
 import PostDetailScreen from '../screens/PostDetailScreen';
+import TrustScoreScreen from '../screens/TrustScoreScreen';
 
 // Safe fallback avatar
 const DEFAULT_AVATAR_URL = null; // No more placeholder — initials will be used
@@ -187,6 +188,7 @@ function MainStack() {
       <Stack.Screen name="LikedPosts" component={LikedPostsScreen} />
       <Stack.Screen name="Connections" component={ConnectionsScreen} />
       <Stack.Screen name="PostDetail" component={PostDetailScreen} />
+      <Stack.Screen name="TrustScore" component={TrustScoreScreen} />
     </Stack.Navigator>
   );
 }

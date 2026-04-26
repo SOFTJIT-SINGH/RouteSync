@@ -257,28 +257,55 @@ export default function ProfileScreen({ navigation }: any) {
             </View>
           )}
 
-          {/* 3.6 Dynamic Traveler Analytics */}
+          {/* 3.6 Dynamic Traveler Analytics (Improved UI/UX) */}
           <View className="mb-10">
-             <Text className="text-xl font-bold text-hi-dark tracking-tight mb-4">Traveler Analytics</Text>
+             <View className="flex-row items-center justify-between mb-5">
+               <View>
+                 <Text className="text-xl font-black text-hi-dark tracking-tight">Traveler Analytics</Text>
+                 <Text className="text-[10px] font-bold text-hi-gray-30 uppercase tracking-widest mt-1">Your Journey Insights</Text>
+               </View>
+               <TouchableOpacity 
+                 onPress={() => navigation.navigate('TrustScore')}
+                 className="bg-hi-green/10 px-3 py-1.5 rounded-full border border-hi-green/10 flex-row items-center"
+               >
+                  <Ionicons name="help-circle-outline" size={14} color="#30AF5B" />
+                  <Text className="text-[10px] font-black text-hi-green uppercase tracking-tighter ml-1">Score Guide</Text>
+               </TouchableOpacity>
+             </View>
+
              <View className="flex-row gap-3">
-                <View className="flex-1 bg-hi-green/5 p-4 rounded-[28px] border border-hi-green/10">
-                   <Text className="text-lg font-black text-hi-green">
+                <View className="flex-1 bg-white p-5 rounded-[32px] border border-hi-gray-10 shadow-sm shadow-gray-100 items-center">
+                   <View className="w-10 h-10 bg-hi-green/10 rounded-full items-center justify-center mb-3">
+                      <Feather name="check-circle" size={18} color="#30AF5B" />
+                   </View>
+                   <Text className="text-xl font-black text-hi-dark">
                      {myTrips.filter(t => new Date(t.end_date) < new Date()).length}
                    </Text>
-                   <Text className="text-[10px] font-black text-hi-gray-30 uppercase tracking-widest mt-1">Completed</Text>
+                   <Text className="text-[10px] font-black text-hi-gray-30 uppercase tracking-tighter mt-1">Trips Done</Text>
                 </View>
-                <View className="flex-1 bg-hi-bg/50 p-4 rounded-[28px] border border-hi-gray-10">
-                   <Text className="text-lg font-black text-hi-dark">
+
+                <View className="flex-1 bg-white p-5 rounded-[32px] border border-hi-gray-10 shadow-sm shadow-gray-100 items-center">
+                   <View className="w-10 h-10 bg-blue-50 rounded-full items-center justify-center mb-3">
+                      <Feather name="map-pin" size={18} color="#3B82F6" />
+                   </View>
+                   <Text className="text-xl font-black text-hi-dark">
                      {[...new Set(myTrips.map(t => t.destination).filter(Boolean))].length}
                    </Text>
-                   <Text className="text-[10px] font-black text-hi-gray-30 uppercase tracking-widest mt-1">Destinations</Text>
+                   <Text className="text-[10px] font-black text-hi-gray-30 uppercase tracking-tighter mt-1">Visited</Text>
                 </View>
-                <View className="flex-1 bg-hi-orange/5 p-4 rounded-[28px] border border-hi-orange/10">
-                   <Text className="text-lg font-black text-hi-orange">
+
+                <TouchableOpacity 
+                  onPress={() => navigation.navigate('TrustScore')}
+                  className="flex-1 bg-white p-5 rounded-[32px] border border-hi-gray-10 shadow-sm shadow-gray-100 items-center"
+                >
+                   <View className="w-10 h-10 bg-hi-orange/10 rounded-full items-center justify-center mb-3">
+                      <Feather name="shield" size={18} color="#F97316" />
+                   </View>
+                   <Text className="text-xl font-black text-hi-dark">
                      {Math.min(100, 20 + (profile?.avatar_url ? 20 : 0) + (profile?.bio ? 20 : 0) + (myTrips.length * 10))}%
                    </Text>
-                   <Text className="text-[10px] font-black text-hi-gray-30 uppercase tracking-widest mt-1">Trust Score</Text>
-                </View>
+                   <Text className="text-[10px] font-black text-hi-gray-30 uppercase tracking-tighter mt-1">Trust Score</Text>
+                </TouchableOpacity>
              </View>
           </View>
 
